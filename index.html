@@ -437,6 +437,89 @@ nav button[data-tab=ban] span{font-weight:700;color:var(--xanh-d)}}
 @media(min-width:960px){nav .nut-them{display:none!important}}
 .menu-them{display:grid;grid-template-columns:1fr 1fr;gap:10px}.menu-them button{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:14px;border:1px solid var(--vien);border-radius:14px;background:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:14px;color:var(--chu)}
 .menu-them button small{font-weight:500;color:var(--mo);font-size:12px}.menu-them button svg{width:24px;height:24px;color:var(--xanh)}.menu-them button.do svg{color:var(--do)}.menu-them button.on{border-color:var(--xanh);background:var(--xanh-n)}
+
+/* ĐĂNG NHẬP (v7) — màn khoá cao cấp */
+body.dang-dn{background:#04110b}
+#dn{min-height:100vh;min-height:100dvh;position:relative;overflow:hidden;background:radial-gradient(1200px 700px at 70% -10%,#0b3a29 0%,transparent 60%),linear-gradient(160deg,#06180f 0%,#030b07 70%);color:#e8f5ee;display:block}
+#dn .nen-dn{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#dn .cuc{position:absolute;border-radius:50%;filter:blur(80px);opacity:.5;animation:dnTroi 22s ease-in-out infinite alternate}
+#dn .cuc.a{width:560px;height:560px;background:#059669;top:-200px;left:-160px}
+#dn .cuc.b{width:520px;height:520px;background:#0d9488;bottom:-220px;right:-160px;animation-delay:-7s;opacity:.42}
+#dn .cuc.c{width:320px;height:320px;background:#84cc16;top:38%;left:46%;opacity:.14;animation-delay:-13s}
+#dn .nen-dn::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:24px 24px;mask-image:radial-gradient(ellipse at 50% 40%,#000 30%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 30%,transparent 80%)}
+@keyframes dnTroi{to{transform:translate(70px,50px) scale(1.12)}}
+@media (prefers-reduced-motion:reduce){#dn .cuc{animation:none}}
+#dn .dn-khung{position:relative;z-index:1;min-height:100vh;min-height:100dvh;display:grid;grid-template-columns:1fr;align-content:start;gap:18px;padding:22px 18px 28px}
+@media(min-width:960px){#dn .dn-khung{grid-template-columns:1.1fr minmax(380px,440px);align-content:center;align-items:center;gap:56px;padding:48px 72px;max-width:1240px;margin:0 auto}}
+#dn .dn-trai{background:none;padding:0;color:inherit;display:flex;flex-direction:column;gap:0;overflow:visible}
+#dn .dn-trai::before,#dn .dn-trai::after{display:none}
+#dn .dn-hieu{display:flex;align-items:center;gap:12px}
+#dn .dn-hieu .logo{width:46px;height:46px;border-radius:14px;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 10px 30px rgba(16,185,129,.45)}
+#dn .dn-hieu b{color:#fff;font-size:16px;font-weight:700;letter-spacing:-.2px}#dn .dn-hieu small{color:#86a698;font-size:12px}
+#dn .dn-giua{margin:0;padding:0;display:block}
+#dn .dn-chao{margin-top:26px;font-size:14px;font-weight:600;color:#6ee7b7;letter-spacing:.2px}
+#dn .dn-dongho{font-size:64px;font-weight:300;letter-spacing:-3px;line-height:1;color:#fff;font-variant-numeric:tabular-nums;margin:6px 0 6px;text-shadow:0 10px 40px rgba(16,185,129,.25)}
+#dn .dn-ngay{color:#a7c4b5;font-size:14.5px;font-weight:500}
+#dn .dn-tinh{display:none}
+#dn .dn-chan{display:none}
+@media(min-width:960px){
+ #dn .dn-trai{min-height:520px}
+ #dn .dn-chao{margin-top:auto;font-size:16px}
+ #dn .dn-giua{margin:auto 0}
+ #dn .dn-dongho{font-size:112px;letter-spacing:-6px;margin:10px 0 10px}
+ #dn .dn-ngay{font-size:18px}
+ #dn .dn-tinh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:40px;max-width:480px}
+ #dn .dn-tinh div{display:flex;gap:11px;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 13px;backdrop-filter:blur(8px)}
+ #dn .dn-tinh svg{width:19px;height:19px;color:#34d399;flex:none}
+ #dn .dn-tinh b{display:block;color:#fff;font-size:13.5px;font-weight:600}#dn .dn-tinh small{color:#86a698;font-size:12px}
+ #dn .dn-chan{display:block;margin-top:auto;color:#5f7d70;font-size:12px}
+}
+#dn .dn-phai{background:none;padding:0;display:flex;justify-content:center;align-items:flex-start}
+#dn .dn-the{width:100%;max-width:440px;background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.14);border-radius:28px;padding:26px 22px 20px;box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.14);backdrop-filter:blur(26px) saturate(140%);-webkit-backdrop-filter:blur(26px) saturate(140%);color:#e8f5ee;animation:dnLen .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes dnLen{from{opacity:0;transform:translateY(14px) scale(.98)}}
+@media(min-width:960px){#dn .dn-the{padding:34px 32px 26px}}
+#dn .dn-buoc{justify-content:center;color:#86a698;margin-bottom:16px}
+#dn .dn-buoc i{background:rgba(255,255,255,.15)}#dn .dn-buoc i.d{background:#34d399}
+#dn .dn-the h2{color:#fff;text-align:center;font-size:24px;font-weight:700;letter-spacing:-.4px;margin:0 0 4px}
+#dn .dn-the .phu{color:#93b2a4;text-align:center;font-size:13.5px;margin-bottom:20px}
+#dn .dn-ds{border:0;border-radius:0;overflow:visible;display:flex;flex-direction:column;gap:10px}
+#dn .dn-ds button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:12px 14px;color:#fff;transition:background .15s,border-color .15s,transform .1s}
+#dn .dn-ds button:hover{background:rgba(255,255,255,.1);border-color:rgba(52,211,153,.5)}#dn .dn-ds button:active{transform:scale(.985)}
+#dn .dn-ds .thumb,#dn .dn-chon .thumb{border-radius:50%;box-shadow:0 0 0 2px #071a11,0 0 0 4px rgba(52,211,153,.85),0 8px 24px rgba(16,185,129,.35);color:#fff;font-weight:700}
+#dn .dn-ds .thumb{width:44px;height:44px;font-size:15px}
+#dn .dn-ds b{color:#fff;font-weight:600}#dn .dn-ds small{color:#86a698}#dn .dn-ds .mui{color:#6ee7b7}
+#dn .dn-chon{flex-direction:column;justify-content:center;text-align:center;border:0;padding:0;margin:0 0 6px;gap:8px}
+#dn .dn-chon .thumb{width:72px;height:72px;font-size:24px}
+#dn .dn-chon .nd{flex:none}#dn .dn-chon b{color:#fff;font-size:17px;font-weight:700}#dn .dn-chon small{color:#86a698}
+#dn .dn-chon .btn.nho{background:none;border:0;color:#6ee7b7;font-weight:600;font-size:13px;padding:2px 8px;height:auto;box-shadow:none;text-decoration:underline;text-underline-offset:3px}
+#dn .dn-nhan-pin{display:none}
+#dn .dn-cham{justify-content:center;gap:16px;margin:16px 0 4px}
+#dn .dn-cham i{flex:none;width:15px;height:15px;max-width:none;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:transparent;box-shadow:none;transition:all .15s}
+#dn .dn-cham i.d{background:#34d399;border-color:#34d399;box-shadow:0 0 14px rgba(52,211,153,.75);transform:scale(1.08)}
+#dn .dn-cham i.d::after{display:none}
+#dn .dn-cham i.ht{border-color:#fff;background:transparent;box-shadow:none}
+#dn .dn-cham.sai i{border-color:#f87171;background:#f87171;box-shadow:0 0 12px rgba(248,113,113,.7)}
+#dn .dn-loi{text-align:center;color:#fca5a5;min-height:20px;margin:6px 0 10px}
+#dn .dn-phim{grid-template-columns:repeat(3,72px);justify-content:center;gap:14px 24px}
+#dn .dn-phim button{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:27px;font-weight:500;transition:background .12s,transform .08s;display:grid;place-items:center;padding:0}
+#dn .dn-phim button:hover{background:rgba(255,255,255,.14)}
+#dn .dn-phim button:active{transform:scale(.92);background:rgba(52,211,153,.35)}
+#dn .dn-phim button.phu-p{background:transparent;border-color:transparent;color:#a7c4b5}
+#dn .dn-phim button.ok-p{background:linear-gradient(135deg,#34d399,#059669);border:0;color:#fff;box-shadow:0 10px 28px rgba(16,185,129,.5)}
+#dn .dn-phim button.ok-p:hover{filter:brightness(1.08)}
+#dn .dn-phim svg{width:24px;height:24px}
+@media(max-width:360px){#dn .dn-phim{grid-template-columns:repeat(3,64px);gap:12px 20px}#dn .dn-phim button{width:64px;height:64px;font-size:24px}}
+#dn .dn-nho{color:#a7c4b5;margin:18px 4px 4px;font-weight:500;font-size:13px}
+#dn .dn-baomat{color:#6b8a7c;margin-top:18px}#dn .dn-baomat svg{width:13px;height:13px}
+#dn .dn-the .trong{color:#93b2a4;background:none;border:0}
+#dn .dn-the .f{color:#a7c4b5}
+#dn .dn-the .f input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#fff}
+#dn .dn-the .f input::placeholder{color:#6b8a7c}
+#dn .dn-the .f input:focus{border-color:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.18)}
+#dn .dn-the .btn.lon{background:linear-gradient(135deg,#10b981,#059669);border:0;color:#fff;height:52px;border-radius:16px;box-shadow:0 12px 28px rgba(16,185,129,.4);font-weight:700}
+#dn .dn-the .btn.lon:hover{filter:brightness(1.06);background:linear-gradient(135deg,#10b981,#059669)}
+#dn .dn-the .mo{color:#86a698}
+@media(max-width:959px){#dn.pin .dn-giua,#dn.pin .dn-buoc{display:none}#dn.pin .dn-khung{gap:14px;padding-top:16px}#dn.pin .dn-the{padding:20px 18px 16px}#dn.pin .dn-the h2{font-size:21px}#dn.pin .dn-the .phu{margin-bottom:14px}#dn.pin .dn-chon .thumb{width:58px;height:58px;font-size:20px}#dn.pin .dn-phim{gap:12px 24px}#dn.pin .dn-nho{margin-top:14px}#dn.pin .dn-baomat{margin-top:12px}}
 </style>
 </head>
 <body>
@@ -637,16 +720,22 @@ var THU_VN = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm"
 function khungDN(tenTiem, noi) {
   document.body.classList.add("dang-dn"); S = null;
   var ten = tenTiem || "Tiệm Tạp Hoá", tinh = [
-    [IC.ban, "Bán hàng nhanh", "Quét mã vạch, thu tiền 1 chạm"], [IC.hang, "Kho & hạn dùng", "Tồn kho, gợi ý nhập hàng"],
-    [IC.kh, "Khách & công nợ", "Sổ nợ, tích điểm khách quen"], [IC.so, "Lời lỗ rõ ràng", "Theo ngày, tháng, người bán"]];
-  $("trang").innerHTML = '<div id="dn"><div class="dn-trai"><div class="dn-hieu"><div class="logo">' + LOGO + "</div><div><b>" + esc(ten) + '</b><small>Phần mềm quản lý bán hàng</small></div></div>' +
-    '<div class="dn-giua"><span class="nhan">' + IC.khoa.replace("<svg", '<svg style="width:13px;height:13px"') + 'Khu vực nội bộ</span><h1>' + esc(ten) + '</h1><p>Đăng nhập để bán hàng, quản lý kho, công nợ và xem báo cáo kinh doanh của cửa hàng.</p>' +
+    [IC.ban, "Bán hàng nhanh", "Quét mã, thu tiền 1 chạm"], [IC.hang, "Kho & hạn dùng", "Tồn kho, gợi ý nhập"],
+    [IC.kh, "Khách & công nợ", "Sổ nợ, tích điểm"], [IC.so, "Lời lỗ rõ ràng", "Theo ngày, tháng, ca"]];
+  $("trang").innerHTML = '<div id="dn"><div class="nen-dn" aria-hidden="true"><i class="cuc a"></i><i class="cuc b"></i><i class="cuc c"></i></div><div class="dn-khung">' +
+    '<div class="dn-trai"><div class="dn-hieu"><div class="logo">' + LOGO + "</div><div><b>" + esc(ten) + '</b><small>Phần mềm quản lý bán hàng</small></div></div>' +
+    '<div class="dn-giua"><div class="dn-chao" id="dn-chao"></div><div class="dn-dongho" id="dn-gio"></div><div class="dn-ngay" id="dn-ngay"></div>' +
     '<div class="dn-tinh">' + tinh.map(function (x) { return "<div>" + x[0] + "<span><b>" + x[1] + "</b><small>" + x[2] + "</small></span></div>"; }).join("") + "</div></div>" +
-    '<div class="dn-chan"><span>© ' + homNay().slice(0, 4) + " " + esc(ten) + '</span><span id="dn-gio"></span></div></div>' +
-    '<div class="dn-phai"><div class="dn-the">' + noi + '<div class="dn-baomat">' + IC.khoa + "Kết nối bảo mật · dữ liệu lưu trên Google Drive của chủ tiệm</div></div></div></div>";
-  gioDN();
+    '<div class="dn-chan">© ' + homNay().slice(0, 4) + " " + esc(ten) + " · Quản Lý</div></div>" +
+    '<div class="dn-phai"><div class="dn-the">' + noi + '<div class="dn-baomat">' + IC.khoa + "Kết nối bảo mật · dữ liệu của riêng tiệm</div></div></div></div></div>";
+  gioDN(); clearInterval(khungDN.h); khungDN.h = setInterval(function () { if (!$("dn-gio")) { clearInterval(khungDN.h); return; } gioDN(); }, 10000);
 }
-function gioDN() { var o = $("dn-gio"); if (!o) return; var d = gioVN(); o.textContent = THU_VN[d.getDay()] + ", " + ngayVN(iso(d)) + " · " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+function gioDN() {
+  var o = $("dn-gio"); if (!o) return; var d = gioVN(), h = d.getHours();
+  o.textContent = String(h).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  var n = $("dn-ngay"); if (n) n.textContent = THU_VN[d.getDay()] + ", " + d.getDate() + " tháng " + (d.getMonth() + 1) + ", " + d.getFullYear();
+  var c = $("dn-chao"); if (c) c.textContent = h < 5 ? "Chúc một đêm an lành" : h < 11 ? "Chào buổi sáng ☀" : h < 13 ? "Chào buổi trưa" : h < 18 ? "Chào buổi chiều" : "Chào buổi tối ✨";
+}
 setInterval(gioDN, 20000);
 function moDN() {
   khungDN(DS_NGUOI ? DS_NGUOI.tenTiem : "", '<div class="trong">Đang tải…</div>');
@@ -655,14 +744,13 @@ function moDN() {
 function veDN(loi) {
   var o = DS_NGUOI, c = DN_CHON;
   var buoc = '<div class="dn-buoc"><i class="d"></i><i class="' + (c ? "d" : "") + '"></i><span>Bước ' + (c ? 2 : 1) + "/2</span></div>";
-  khungDN(o.tenTiem, buoc + "<h2>" + (c ? "Nhập mã PIN" : "Đăng nhập") + '</h2><div class="phu">' + (c ? "Mã PIN gồm 4–6 chữ số, do chủ tiệm cấp." : "Chọn tài khoản của bạn để tiếp tục.") + "</div>" +
+  khungDN(o.tenTiem, buoc + "<h2>" + (c ? "Nhập mã PIN" : "Ai đang bán hàng?") + '</h2><div class="phu">' + (c ? "4–6 chữ số · bấm ✓ để vào" : "Chọn tài khoản của bạn để tiếp tục") + "</div>" +
     (!c ? '<div class="dn-ds">' + o.nv.map(function (n) { return '<button data-dn-nguoi="' + esc(n.ma) + '"><span class="thumb" style="' + nenHang({nhom: n.ten}) + '">' + esc(chuTat(n.ten)) + '</span><span class="nd"><b>' + esc(n.ten) + "</b><small>" + (n.vai === "chu" ? "Chủ tiệm · toàn quyền" : "Nhân viên bán hàng") + '</small></span><span class="mui">›</span></button>'; }).join("") + "</div>"
       : '<div class="dn-chon"><span class="thumb" style="' + nenHang({nhom: c.ten}) + '">' + esc(chuTat(c.ten)) + '</span><span class="nd"><b>' + esc(c.ten) + "</b><small>" + (c.vai === "chu" ? "Chủ tiệm" : "Nhân viên") + "</small></span>" + (o.nv.length > 1 ? '<button class="btn nho" data-dn-doi="1">Đổi tài khoản</button>' : "") + "</div>" +
         '<div class="dn-nhan-pin">Mã PIN</div><div class="dn-cham" id="dn-cham"></div><div class="dn-loi" id="dn-loi">' + esc(loi || "") + '</div><div class="dn-phim">' +
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "⌫"].map(function (x) { return '<button data-pin="' + x + '"' + (x === "C" ? ' class="phu-p"' : x === "⌫" ? ' class="phu-p" title="Xoá 1 số"' : "") + ">" + (x === "C" ? "Xoá hết" : x === "⌫" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M18 9l-6 6M12 9l6 6"/></svg>' : x) + "</button>"; }).join("") +
-        '</div><label class="dn-nho"><span>Ghi nhớ đăng nhập trên máy này</span><span class="gat"><input type="checkbox" id="dn-nho"' + (DN_NHO ? " checked" : "") + "><span></span></span></label>" +
-        '<button class="btn lon" data-pin="ok" style="width:100%">Đăng nhập</button>'));
-  PIN_GO = ""; chamPin();
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, "⌫", 0, "ok"].map(function (x) { return '<button data-pin="' + x + '"' + (x === "ok" ? ' class="ok-p" title="Đăng nhập" aria-label="Đăng nhập"' : x === "⌫" ? ' class="phu-p" title="Xoá 1 số" aria-label="Xoá 1 số"' : "") + ">" + (x === "ok" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>' : x === "⌫" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M18 9l-6 6M12 9l6 6"/></svg>' : x) + "</button>"; }).join("") +
+        '</div><label class="dn-nho"><span>Ghi nhớ đăng nhập trên máy này</span><span class="gat"><input type="checkbox" id="dn-nho"' + (DN_NHO ? " checked" : "") + "><span></span></span></label>"));
+  PIN_GO = ""; chamPin(); var dn0 = $("dn"); if (dn0) dn0.classList.toggle("pin", !!c);
 }
 function chamPin() { var o = $("dn-cham"); if (!o) return; var n = Math.max(4, Math.min(6, PIN_GO.length + (PIN_GO.length >= 4 && PIN_GO.length < 6 ? 1 : 0))); o.classList.remove("sai"); o.innerHTML = Array.from({length: n}, function (_, i) { return '<i class="' + (i < PIN_GO.length ? "d" : i === PIN_GO.length ? "ht" : "") + '"></i>'; }).join(""); }
 function thuPin() {
