@@ -877,7 +877,7 @@ function trangThai(t) { var o = $("dongbo"); if (o) o.className = t || ""; }
 function goi(fn) {
   var a = Array.prototype.slice.call(arguments, 1); trangThai("dang");
   return new Promise(function (ok, loi) {
-    var xong = function (s) { trangThai(""); if (fn === "huyHD" || fn === "traHang") LS_KY = {}; var o = typeof s === "string" ? JSON.parse(s) : s; if (o && Array.isArray(o.hang)) { luuSnap(o); phuCho(o); } MANG = true; veMang(); ok(o); },
+    var xong = function (s) { trangThai(""); if (fn === "huyHD" || fn === "traHang") { LS_KY = {}; HD_SV = {q: "", hd: []}; } var o = typeof s === "string" ? JSON.parse(s) : s; if (o && Array.isArray(o.hang)) { luuSnap(o); phuCho(o); } MANG = true; veMang(); ok(o); },
       hong = function (e) { if (laLoiMang(e)) { MANG = false; veMang(); } trangThai("loi"); loi(e); };
     if (!THAT && window.MAT_MANG) { setTimeout(function () { hong(new Error("Không kết nối được máy chủ — kiểm tra mạng rồi thử lại")); }, 100); return; }
     if (!THAT) { setTimeout(function () { try { xong(MAU(fn, [CH.k + "|" + (DN.ma || "") + "|" + (DN.pin || "")].concat(a))); } catch (e) { hong(e); } }, 150); return; }
@@ -1586,7 +1586,7 @@ function coSanKy(kh) {   // chỉ dùng số liệu đã có (để so kỳ trư
 function timHD(soHD) {
   var h = S.hd.find(function (x) { return x.so === soHD; }); if (h) return h;
   for (var k in LS_KY) { var o = LS_KY[k]; if (o.hd) { h = o.hd.find(function (x) { return x.so === soHD; }); if (h) return h; } }
-  return null;
+  return HD_SV.hd.find(function (x) { return x.so === soHD; }) || null;
 }
 function thanhKy(loai, dich) { var p = kyTu(loai); return '<button class="chip chon-ky' + (p ? " on" : "") + '" data-chon-ky="' + dich + '">📅 ' + (p ? esc(tenKyChon(loai)) : "Chọn ngày, tháng, năm…") + "</button>"; }
 function navKy(loai, dich, ng) {
@@ -1628,15 +1628,39 @@ function bieuKy(kh, ok) {
   return {tieu: "Doanh thu theo tháng <small>" + ngayVN(kh[0]) + " – " + ngayVN(a1) + "</small>", cot: cot};
 }
 var CACH = {tm: ["Tiền mặt", "c-xanh"], ck: ["Chuyển khoản", "c-duong"], no: ["Ghi nợ", "c-do"]};
+// tìm hoá đơn: chữ (số HĐ, khách, SĐT, người bán) hoặc số tiền (35000 / 35.000 / 35k / 35)
+function soTienTim(q) {
+  var s = String(q || "").toLowerCase().replace(/\s+/g, "").replace(/(đ|d|dong|đồng)$/, ""), m = s.match(/^(\d[\d.,]*)(k|n|ng|nghin|nghìn|tr|trieu|triệu)?$/);
+  if (!m) return null; var n = +m[1].replace(/[.,]/g, ""); if (!n) return null;
+  if (m[2] && m[2].charAt(0) === "t") n *= 1e6; else if (m[2]) n *= 1000;
+  return n;
+}
+function khopHD(x, q) {
+  var t = boDau(q.trim()); if (!t) return true;
+  if (boDau(x.so + " " + x.khach + " " + x.sdt + " " + x.nb).indexOf(t) >= 0) return true;
+  var n = soTienTim(q); if (!n) return false;
+  var ds = [Math.abs(x.phai), Math.abs(x.tien)]; return ds.indexOf(n) >= 0 || (n < 1000 && ds.indexOf(n * 1000) >= 0);
+}
+var HD_SV = {q: "", hd: []};
+function timSV() {
+  var q = HD_TIM.trim(); if (q.length < 2 || HD_SV.q === q) return;
+  HD_SV = {q: q, hd: [], dang: true};
+  goi("timHoaDon", q).then(function (r) { if (HD_SV.q !== q) return; HD_SV = {q: q, hd: r.hd || [], du: r.du}; if (TRANG === "hd" && $("hop").hidden) ve(); })
+    .catch(function (e) { if (HD_SV.q !== q) return; HD_SV = {q: q, hd: [], loi: (e && e.message) || String(e)}; if (TRANG === "hd" && $("hop").hidden) ve(); });
+}
 function veHD() {
-  var kh = khoang(HD_LOC), ng = nguonKy(kh), t = boDau(HD_TIM.trim());
-  var ds = ng.hd.filter(function (x) { var n = x.luc.slice(0, 10); return n >= kh[0] && n <= kh[1] && (!t || boDau(x.so + " " + x.khach + " " + x.sdt + " " + x.nb).indexOf(t) >= 0); }).slice().reverse();
+  var q = HD_TIM.trim(), tim = q.length >= 2, kh = khoang(HD_LOC), ng = tim ? {hd: []} : nguonKy(kh), ds;
+  if (tim) {   // đang tìm → mọi ngày: 62 ngày trong máy + kết quả máy chủ
+    var co = {}; ds = [];
+    S.hd.concat(HD_SV.q === q ? HD_SV.hd : []).forEach(function (x) { if (!co[x.so] && khopHD(x, q)) { co[x.so] = 1; ds.push(x); } });
+    ds.sort(function (a, b) { return a.luc < b.luc ? 1 : a.luc > b.luc ? -1 : 0; });
+  } else ds = ng.hd.filter(function (x) { var n = x.luc.slice(0, 10); return n >= kh[0] && n <= kh[1] && khopHD(x, q); }).slice().reverse();
   var ok = ds.filter(function (x) { return x.tt !== "huy"; }), okHD = ok.filter(function (x) { return x.so.indexOf("HD") === 0; });
-  return '<div class="tieu-de"><h2>Hoá đơn</h2></div><div class="chips">' + thanhKy(HD_LOC, "hd") + KY.concat([["tat", "62 ngày"]]).map(function (c) { return '<button class="chip' + (HD_LOC === c[0] ? " on" : "") + '" data-hdloc="' + c[0] + '">' + c[1] + "</button>"; }).join("") + "</div>" + navKy(HD_LOC, "hd", ng) +
+  return '<div class="tieu-de"><h2>Hoá đơn</h2></div><div class="chips">' + thanhKy(HD_LOC, "hd") + KY.concat([["tat", "62 ngày"]]).map(function (c) { return '<button class="chip' + (HD_LOC === c[0] ? " on" : "") + '" data-hdloc="' + c[0] + '">' + c[1] + "</button>"; }).join("") + "</div>" + (tim ? '<div class="ky-tai" style="background:#ecfdf5;border-color:#a7e3c9;color:#065f46"><span>🔎 Đang tìm «<b>' + esc(q) + '</b>» trong mọi ngày ' + (soTienTim(q) ? "(số tiền " + dd(soTienTim(q) < 1000 ? soTienTim(q) * 1000 : soTienTim(q)) + " hoặc số HĐ)" : "") + (HD_SV.q === q && HD_SV.dang ? " · đang tìm thêm trên máy chủ…" : HD_SV.q === q && HD_SV.loi ? " · máy chủ: " + esc(HD_SV.loi) : "") + '</span><button class="btn nho" data-hd-bo-tim="1" style="margin-left:auto">✕ Bỏ tìm</button></div>' : navKy(HD_LOC, "hd", ng)) +
     '<div class="kpi">' + kpi("hd", "duong", "Số hoá đơn", okHD.length) + kpi("tien", "xanh", "Doanh thu", dd(cong(ok, "phai"))) + (laChu() ? kpi("lai", "tim", "Lãi gộp", dd(cong(ok, "lai"))) : "") + kpi("canh", "do", "Đã huỷ", ds.length - ok.length) + "</div>" +
-    '<div class="the"><div class="timbox">' + IC.tim + '<input id="hd-tim" placeholder="Tìm số hoá đơn, tên khách, SĐT, người bán…" value="' + esc(HD_TIM) + '"></div><div class="cuon"><table class="bang"><thead><tr><th>Số HĐ</th><th>Giờ</th><th>Khách</th><th class="an-dt">Người bán</th><th>Thanh toán</th><th class="r">Tổng</th></tr></thead><tbody>' +
+    '<div class="the"><div class="timbox">' + IC.tim + '<input id="hd-tim" placeholder="Tìm số tiền, số hoá đơn, tên khách, SĐT…" value="' + esc(HD_TIM) + '" autocomplete="off"></div><div class="cuon"><table class="bang"><thead><tr><th>Số HĐ</th><th>Giờ</th><th>Khách</th><th class="an-dt">Người bán</th><th>Thanh toán</th><th class="r">Tổng</th></tr></thead><tbody>' +
     (ds.slice(0, 300).map(function (x) { var c = CACH[x.cach] || ["", ""];
-      return '<tr class="bam" data-xem-hd="' + esc(x.so) + '"' + (x.tt === "huy" ? ' style="opacity:.5;text-decoration:line-through"' : "") + "><td><b>" + esc(x.so) + '</b><span class="gio-dt">' + esc(x.luc.slice(11, 16)) + " · " + esc(ngayVN(x.luc).slice(0, 5)) + '</span></td><td class="mo">' + esc(x.luc.slice(11, 16)) + " " + esc(ngayVN(x.luc).slice(0, 5)) + "</td><td>" + esc(x.khach || "Khách lẻ") + '</td><td class="an-dt mo">' + esc(x.nb) + '</td><td>' + (x.so.indexOf("TH") === 0 ? '<span class="tag c-cam">Trả hàng</span>' : '<span class="tag ' + c[1] + '">' + c[0] + "</span>") + '</td><td class="r so"><b>' + so(x.phai) + "</b></td></tr>"; }).join("") || '<tr><td colspan=6 class="trong">' + (ng.dang ? "Đang tải…" : "Không có hoá đơn trong kỳ này") + "</td></tr>") + (ds.length > 300 ? '<tr><td colspan=6 class="mo nho" style="text-align:center">Đang hiện 300 / ' + soVN(ds.length) + " hoá đơn mới nhất — gõ ô tìm để lọc</td></tr>" : "") + "</tbody></table></div></div>";
+      return '<tr class="bam" data-xem-hd="' + esc(x.so) + '"' + (x.tt === "huy" ? ' style="opacity:.5;text-decoration:line-through"' : "") + "><td><b>" + esc(x.so) + '</b><span class="gio-dt">' + esc(x.luc.slice(11, 16)) + " · " + esc(ngayVN(x.luc).slice(0, 5)) + '</span></td><td class="mo">' + esc(x.luc.slice(11, 16)) + " " + esc(tim ? ngayVN(x.luc) : ngayVN(x.luc).slice(0, 5)) + "</td><td>" + esc(x.khach || "Khách lẻ") + '</td><td class="an-dt mo">' + esc(x.nb) + '</td><td>' + (x.so.indexOf("TH") === 0 ? '<span class="tag c-cam">Trả hàng</span>' : '<span class="tag ' + c[1] + '">' + c[0] + "</span>") + '</td><td class="r so"><b>' + so(x.phai) + "</b></td></tr>"; }).join("") || '<tr><td colspan=6 class="trong">' + (tim ? (HD_SV.q === q && HD_SV.dang ? "Đang tìm…" : "Không thấy hoá đơn nào khớp «" + esc(q) + "»") : ng.dang ? "Đang tải…" : "Không có hoá đơn trong kỳ này") + "</td></tr>") + (ds.length > 300 ? '<tr><td colspan=6 class="mo nho" style="text-align:center">Đang hiện 300 / ' + soVN(ds.length) + " hoá đơn mới nhất — gõ ô tìm để lọc</td></tr>" : "") + "</tbody></table></div></div>";
 }
 // vẽ hoá đơn thành ảnh để gửi khách
 function anhHD(soHD) {
@@ -2126,6 +2150,7 @@ document.addEventListener("click", function (e) {
   if (t.closest("[data-no-moi]")) { formNoTay(); return; }
   if ((b = t.closest("[data-no-ghi]"))) { var ten = b.dataset.ten || ($("no-ten") ? $("no-ten").value.trim() : ""), tien = +$("no-tien").value || 0; if (!ten || !tien) { alert("Nhập tên khách và số tiền"); return; }
     sau(b, goi("soNo", {khach: ten, sdt: $("no-sdt") ? $("no-sdt").value : "", tien: tien, loai: b.dataset.noGhi, gc: $("no-gc").value}), b.dataset.noGhi === "tra" ? "Đã ghi khách trả ✓" : "Đã ghi nợ ✓"); return; }
+  if ((b = t.closest("[data-hd-bo-tim]"))) { HD_TIM = ""; ve(); return; }
   if ((b = t.closest("[data-chon-ky]"))) { formKy(b.dataset.chonKy); return; }
   if ((b = t.closest("[data-ky-dat]"))) { var v8 = b.dataset.kyDat, i8 = v8.indexOf("|"); datKy(v8.slice(0, i8), v8.slice(i8 + 1)); return; }
   if ((b = t.closest("[data-ky-buoc]"))) { var p8 = b.dataset.kyBuoc.split("|"); datKy(p8[0], doiKy(p8[0] === "bc" ? BC : HD_LOC, +p8[1])); return; }
@@ -2153,7 +2178,7 @@ document.addEventListener("click", function (e) {
 document.addEventListener("input", function (e) {
   var t = e.target;
   if (t.id === "tim") { TIM = t.value; clearTimeout(ve.h); ve.h = setTimeout(ve, 120); return; }
-  if (t.id === "hd-tim") { HD_TIM = t.value; clearTimeout(ve.h); ve.h = setTimeout(ve, 200); return; }
+  if (t.id === "hd-tim") { HD_TIM = t.value; clearTimeout(ve.h); ve.h = setTimeout(ve, 200); clearTimeout(timSV.h); timSV.h = setTimeout(timSV, 550); return; }
   if (t.id === "kho-tim") { KHO_TIM = t.value; clearTimeout(ve.h); ve.h = setTimeout(ve, 200); return; }
   if (t.id === "kh-tim") { KH_TIM = t.value; clearTimeout(ve.h); ve.h = setTimeout(ve, 200); return; }
   if (t.classList && t.classList.contains("ngay-vn")) { var so9 = t.value.replace(/\D/g, "").slice(0, 8), vv = so9.length > 4 ? so9.slice(0, 2) + "/" + so9.slice(2, 4) + "/" + so9.slice(4) : so9.length > 2 ? so9.slice(0, 2) + "/" + so9.slice(2) : so9; if (e.inputType !== "deleteContentBackward") t.value = vv; t.style.borderColor = t.value && t.value.length === 10 && !isoTu(t.value) ? "var(--do)" : ""; if (t.dataset.n) nhoNhap(); return; }
