@@ -135,6 +135,7 @@ label.ck{display:flex;gap:9px;align-items:center;margin:8px 0;cursor:pointer}lab
 .sp .gia{font-weight:800;color:var(--xanh-d);font-size:15px}
 .sp .ton{font-size:11px;color:var(--mo);white-space:nowrap}
 .sp .ton.it{color:var(--cam);font-weight:600}
+.sp .bot-gio{position:absolute;top:6px;left:6px;width:34px;height:34px;border-radius:99px;background:#ef4444;color:#fff;display:grid;place-items:center;font-size:22px;font-weight:800;line-height:1;z-index:3;box-shadow:0 2px 8px rgba(239,68,68,.45);border:2px solid #fff;cursor:pointer;user-select:none}.sp .bot-gio:hover{background:#dc2626}.sp .bot-gio:active{transform:scale(.9)}
 .sp .sl-gio{position:absolute;top:8px;right:8px;background:var(--toi);color:#fff;border-radius:99px;min-width:26px;height:26px;display:grid;place-items:center;font-size:12.5px;font-weight:800;padding:0 7px;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .gio-khung{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--bong)}
 .gio-dau{padding:14px 16px 0;display:flex;align-items:center;gap:8px}
@@ -733,7 +734,7 @@ function veBan() {
     '<div class="chips">' + nhom.map(function (n) { return '<button class="chip' + (n === NHOM ? " on" : "") + '" data-nhom="' + esc(n) + '">' + esc(n) + "</button>"; }).join("") + "</div>" +
     (loc.length ? '<div class="luoi">' + loc.map(function (h) {
       var it = h.min > 0 && h.ton <= h.min && h.ton > 0;
-      return '<button class="sp" data-them="' + esc(h.ma) + '">' + (dem[h.ma] ? '<span class="sl-gio">' + soVN(dem[h.ma]) + "</span>" : "") +
+      return '<button class="sp" data-them="' + esc(h.ma) + '">' + (dem[h.ma] ? '<span class="bot-gio" data-bot="' + esc(h.ma) + '" title="Bấm nhầm? Bớt 1" role="button" aria-label="Bớt 1 ' + esc(h.ten) + '">−</span><span class="sl-gio">' + soVN(dem[h.ma]) + "</span>" : "") +
         '<span class="anh" style="' + (ANH[h.ma] ? "background:#f3f6f4" : nenHang(h)) + '">' + (ANH[h.ma] ? '<img src="' + ANH[h.ma] + '" alt="">' : esc(chuTat(h.ten))) + (h.ton <= 0 ? '<span class="het-phu"><span>Hết hàng</span></span>' : "") + "</span>" +
         '<span class="tt"><span class="ten">' + esc(h.ten) + '</span><span class="duoi"><span class="gia">' + so(h.gb) + 'đ</span><span class="ton' + (it ? " it" : "") + '">' + (h.ton > 0 ? "còn " + soVN(h.ton) : "") + "</span></span></span></button>"; }).join("") + "</div>"
       : '<div class="the trong">Không thấy hàng nào' + (TIM ? ' khớp "' + esc(TIM) + '"' + (laChu() ? '<br><br><button class="btn" data-hang-moi="' + esc(TIM) + '">' + IC.cong + "Thêm mặt hàng mới</button>" : "") : "") + "</div>");
@@ -748,6 +749,12 @@ function veBan() {
     '<button class="btn trang lon an-pc" style="margin-top:8px" data-dong-gio="1">← Chọn thêm hàng</button></div></div>';
   var thanh = d.length ? '<div class="thanh-dt" data-mo-gio="1"><div style="flex:1"><b class="so">' + dd(tong) + "</b><small>" + soVN(slTong) + ' sản phẩm · chạm để xem</small></div><button class="btn trang-dt" data-thanhtoan="1">Khác</button><button class="btn chinh" data-thu-nhanh="tm">Thu đủ</button></div>' : "";
   return '<div class="pos' + (XEM_GIO ? " xem-gio" : "") + '"><div>' + trai + "</div>" + phai + thanh + "</div>";
+}
+function botHang(ma) {
+  var d = gio(), i; for (i = d.length - 1; i >= 0; i--) if (d[i].ma === ma) break;
+  if (i < 0) return; var x = d[i], h = hang(ma);
+  x.sl = Math.round((x.sl - Math.min(1, x.sl)) * 1000) / 1000; if (x.sl <= 0) d.splice(i, 1);
+  luuDon(); ve(); bao(x.sl > 0 ? "Đã bớt 1 · " + h.ten + " còn " + soVN(x.sl) : "Đã bỏ " + h.ten + " khỏi đơn");
 }
 function themHang(ma, sl) { var h = hang(ma), d = gio(), x = d.find(function (y) { return y.ma === ma && y.gia === h.gb; }); if (x) x.sl = Math.round((x.sl + (sl || 1)) * 1000) / 1000; else d.push({ma: ma, sl: sl || 1, gia: h.gb}); luuDon(); ve(); }
 function timEnter() {
@@ -1218,6 +1225,7 @@ document.addEventListener("click", function (e) {
   if (t.id === "ca-mo") { sau(t, goi("moCa", +$("ca-dau").value || 0), "Đã mở ca ✓"); return; }
   if (t.id === "ca-dong") { var dem = $("ca-dem").value; if (dem === "") { alert("Nhập số tiền đếm được"); return; } t.disabled = true; goi("dongCa", +dem, $("ca-gc").value).then(function (o) { dongHop(); nhan(o); var c = o.caVua; hop("Đã chốt ca ✓", '<div class="hang-tong"><span class="mo">Két phải có</span><b class="so">' + dd(c.dk) + '</b></div><div class="hang-tong"><span class="mo">Đếm được</span><b class="so">' + dd(c.dem) + '</b></div><div class="phai-tra" style="margin-top:10px;background:' + (c.lech < 0 ? "var(--do)" : "var(--toi)") + '"><span>' + (c.lech < 0 ? "Thiếu" : c.lech > 0 ? "Dư" : "Khớp") + '</span><b class="so">' + dd(Math.abs(c.lech)) + '</b></div><button class="btn chinh lon" data-dong="1">Xong</button>'); }).catch(function (e2) { t.disabled = false; loiBao(e2); }); return; }
   if ((b = t.closest("[data-nhom]"))) { NHOM = b.dataset.nhom; ve(); return; }
+  if ((b = t.closest("[data-bot]"))) { botHang(b.dataset.bot); return; }
   if ((b = t.closest("[data-them]"))) { themHang(b.dataset.them); return; }
   if ((b = t.closest("[data-don]"))) { CUR = +b.dataset.don; luuDon(); ve(); return; }
   if (t.closest("[data-don-moi]")) { DON.push({d: []}); CUR = DON.length - 1; luuDon(); ve(); return; }
