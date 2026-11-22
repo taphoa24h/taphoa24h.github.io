@@ -25,7 +25,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--xanh);box-shadow:0 0 
 .so{font-variant-numeric:tabular-nums}
 /* ===== khung ===== */
 header{position:fixed;top:0;left:0;right:0;height:62px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--vien);display:flex;align-items:center;gap:12px;padding:0 18px;z-index:20}
-.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#10b981,#047857);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;box-shadow:0 4px 12px rgba(5,150,105,.35);flex:none}
+.logo{width:38px;height:38px;border-radius:22.5%;display:grid;place-items:center;box-shadow:0 4px 12px rgba(5,150,105,.35);flex:none;overflow:hidden}.logo svg{width:100%;height:100%;display:block}
 header h1{font-size:16.5px;margin:0;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
 header h1 small{display:block;font-size:11.5px;font-weight:500;color:var(--mo);letter-spacing:0}
 .hphai{margin-left:auto;display:flex;align-items:center;gap:8px}
@@ -408,7 +408,7 @@ body{letter-spacing:-.05px}
 </head>
 <body>
 <header>
-  <div class="logo" id="logo">TH</div>
+  <div class="logo" id="logo"></div>
   <h1 id="ten-tiem">Tiệm Tạp Hoá<small>Quản lý bán hàng</small></h1>
   <div class="hphai" id="hphai"></div>
 </header>
@@ -419,6 +419,7 @@ body{letter-spacing:-.05px}
 <div id="bao"></div>
 <div id="in-vung"></div>
 <script>
+var LOGO = '<svg viewBox="0 0 1024 1024" aria-hidden="true"><defs><linearGradient id="lgQL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#064e3b"/></linearGradient></defs><rect width="1024" height="1024" rx="230" fill="url(#lgQL)"/><rect x="208" y="204" width="608" height="54" rx="22" fill="#fff"/><path d="M214.0 250H333.2V360.4A59.6 59.6 0 0 1 214.0 360.4Z" fill="#fff"/><path d="M333.2 250H452.4V360.4A59.6 59.6 0 0 1 333.2 360.4Z" fill="#d1fae5"/><path d="M452.4 250H571.6V360.4A59.6 59.6 0 0 1 452.4 360.4Z" fill="#fff"/><path d="M571.6 250H690.8V360.4A59.6 59.6 0 0 1 571.6 360.4Z" fill="#d1fae5"/><path d="M690.8 250H810.0V360.4A59.6 59.6 0 0 1 690.8 360.4Z" fill="#fff"/><rect x="270" y="440" width="484" height="360" rx="36" fill="#fff"/><rect x="330" y="500" width="230" height="240" rx="22" fill="#065f46"/><rect x="362" y="642" width="40" height="70" rx="10" fill="#34d399"/><rect x="428" y="592" width="40" height="120" rx="10" fill="#34d399"/><rect x="494" y="537" width="40" height="175" rx="10" fill="#34d399"/><polyline points="360,610 430,565 470,590 530,530" fill="none" stroke="#fbbf24" stroke-width="18" stroke-linejoin="round" stroke-linecap="round"/><polygon points="545,512 503,521 537,553" fill="#fbbf24"/><rect x="600" y="540" width="108" height="260" rx="20" fill="#d1fae5"/><circle cx="686" cy="672" r="9" fill="#065f46"/></svg>';
 var API = "https://script.google.com/macros/s/AKfycbw5nHiUrwhhBuULAuMTa_ptE2-TqLvrnI9r58dgtu-YXbZFhcFLcXy0ZsGbmuY5Ps1f/exec", CO_CAM = true;
 var CH = (function () {
   var q = ""; try { q = new URLSearchParams(location.search).get("k") || ""; } catch (e) {}
@@ -520,14 +521,14 @@ function ve() {
   var tabs = cacTab(); if (!tabs.some(function (t) { return t[0] === TRANG; })) TRANG = laChu() ? "tq" : "ban";
   var tenTrang = (tabs.find(function (t) { return t[0] === TRANG; }) || ["", ""])[1], laPC = window.innerWidth >= 960;
   $("ten-tiem").innerHTML = laPC ? esc(tenTrang) + "<small>" + esc(S.cd.tenTiem) + " · " + ngayVN(homNay()) + "</small>" : esc(S.cd.tenTiem) + "<small>" + (S.u.chuaPin ? "Chủ tiệm · chưa đặt mã PIN" : esc(S.u.ten) + (laChu() ? " · Chủ tiệm" : " · Nhân viên")) + "</small>";
-  $("logo").textContent = chuTat(S.cd.tenTiem.replace(/^(tiệm|tạp hoá|tạp hóa)\s+/i, "")) || "TH";
+  $("logo").innerHTML = LOGO;
   var c = S.caMo;
   $("hphai").innerHTML = '<button class="chip-h tim-h an-dt" data-tim-nhanh="1">' + IC.tim + 'Tìm hàng, hoá đơn, khách…<kbd>Ctrl K</kbd></button>' + '<button class="chip-h an-pc" data-tim-nhanh="1" title="Tìm nhanh">' + IC.tim + "</button>" + '<button class="chip-h' + (c ? " mo" : "") + '" data-ca="1" title="Ca bán"><i></i>' + (c ? '<span class="an-dt">Ca từ </span>' + esc(c.mo.slice(11, 16)) : '<span class="an-dt">Chưa mở ca</span><span class="an-pc">Ca</span>') + "</button>" +
     '<button class="chip-h" data-doi-nguoi="1" title="Đăng xuất">' + IC.khoa + '<span class="an-dt">Đăng xuất</span></button>' +
     '<span id="dongbo" title="Đồng bộ"></span><span id="dongho" class="an-dt"></span>';
   var canh = S.hang.filter(function (h) { return !h.ngung && (h.ton <= 0 || (h.min > 0 && h.ton <= h.min)); }).length;
   var nhomNav = {tq: "Tổng quan", ban: "Bán hàng", hang: "Quản lý", so: "Báo cáo", cd: "Hệ thống"};
-  $("nav").innerHTML = '<div class="thuong-hieu"><div class="logo">' + esc($("logo").textContent) + "</div><div><b>" + esc(S.cd.tenTiem) + "</b><small>Quản lý bán hàng</small></div></div>" +
+  $("nav").innerHTML = '<div class="thuong-hieu"><div class="logo">' + LOGO + "</div><div><b>" + esc(S.cd.tenTiem) + "</b><small>Quản lý bán hàng</small></div></div>" +
     tabs.map(function (t) { var dem = t[0] === "hang" && canh ? '<span class="dem">' + canh + "</span>" : ""; return (nhomNav[t[0]] && laChu() ? '<div class="nhom-nav">' + nhomNav[t[0]] + "</div>" : "") + '<button data-tab="' + t[0] + '" class="' + (TRANG === t[0] ? "on" : "") + '">' + IC[t[0]] + "<span>" + t[1] + "</span>" + dem + "</button>"; }).join("") +
     '<div class="nguoi-dung"><span class="thumb" style="' + nenHang({nhom: S.u.ten}) + '">' + esc(chuTat(S.u.ten)) + "</span><div><b>" + esc(S.u.ten) + "</b><small>" + (laChu() ? "Chủ tiệm" : "Nhân viên") + '</small></div><button data-doi-nguoi="1" title="Đăng xuất">' + IC.khoa + "</button></div>";
   var giu = document.activeElement && document.activeElement.id, pos = giu && document.activeElement.selectionStart;
@@ -548,7 +549,7 @@ function khungDN(tenTiem, noi) {
   var ten = tenTiem || "Tiệm Tạp Hoá", tinh = [
     [IC.ban, "Bán hàng nhanh", "Quét mã vạch, thu tiền 1 chạm"], [IC.hang, "Kho & hạn dùng", "Tồn kho, gợi ý nhập hàng"],
     [IC.kh, "Khách & công nợ", "Sổ nợ, tích điểm khách quen"], [IC.so, "Lời lỗ rõ ràng", "Theo ngày, tháng, người bán"]];
-  $("trang").innerHTML = '<div id="dn"><div class="dn-trai"><div class="dn-hieu"><div class="logo">' + esc(chuTat(String(ten).replace(/^(tiệm|tạp hoá|tạp hóa)\s+/i, "")) || "TH") + "</div><div><b>" + esc(ten) + '</b><small>Phần mềm quản lý bán hàng</small></div></div>' +
+  $("trang").innerHTML = '<div id="dn"><div class="dn-trai"><div class="dn-hieu"><div class="logo">' + LOGO + "</div><div><b>" + esc(ten) + '</b><small>Phần mềm quản lý bán hàng</small></div></div>' +
     '<div class="dn-giua"><span class="nhan">' + IC.khoa.replace("<svg", '<svg style="width:13px;height:13px"') + 'Khu vực nội bộ</span><h1>' + esc(ten) + '</h1><p>Đăng nhập để bán hàng, quản lý kho, công nợ và xem báo cáo kinh doanh của cửa hàng.</p>' +
     '<div class="dn-tinh">' + tinh.map(function (x) { return "<div>" + x[0] + "<span><b>" + x[1] + "</b><small>" + x[2] + "</small></span></div>"; }).join("") + "</div></div>" +
     '<div class="dn-chan"><span>© ' + homNay().slice(0, 4) + " " + esc(ten) + '</span><span id="dn-gio"></span></div></div>' +
