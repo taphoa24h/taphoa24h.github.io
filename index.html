@@ -280,7 +280,7 @@ label.ck{display:flex;gap:9px;align-items:center;margin:8px 0;cursor:pointer}lab
 #cam-hop[hidden]{display:none}
 #cam-vung{width:min(460px,100%);border-radius:16px;overflow:hidden;background:#000;min-height:260px}
 #cam-hop .chu{color:#d1e7dc;font-size:14px;text-align:center;min-height:20px}
-#cam-hop .btn{min-width:160px}
+#cam-hop .btn{min-width:150px}#cam-hop .cam-nuts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}#cam-them:empty{display:none}
 /* ĐĂNG NHẬP (v6) */
 body.dang-dn header,body.dang-dn nav{display:none}body.dang-dn main{padding:0}body.dang-dn{background:#fff}
 #dn{min-height:100vh;display:grid;grid-template-columns:1fr}
@@ -416,7 +416,7 @@ body{letter-spacing:-.05px}
 <nav id="nav"></nav>
 <main id="trang"><div class="khung-cho"><i></i><i class="cao"></i><i></i></div></main>
 <div id="hop" hidden></div>
-<div id="cam-hop" hidden><div id="cam-vung"></div><div class="chu" id="cam-chu">Đưa mã vạch vào giữa khung</div><button class="btn lon" data-cam-dong="1" style="width:auto">Đóng camera</button></div>
+<div id="cam-hop" hidden><div id="cam-vung"></div><div id="cam-tep" hidden></div><div class="chu" id="cam-chu">Đưa mã vạch vào giữa khung</div><div id="cam-them"></div><div class="cam-nuts"><label class="btn trang lon" style="width:auto">📷 Chụp ảnh mã<input type="file" accept="image/*" capture="environment" id="cam-anh" hidden></label><button class="btn lon" data-cam-dong="1" style="width:auto">Đóng camera</button></div><div class="chu nho" style="opacity:.7;font-size:12.5px">Mẹo: để mã cách camera 10–20 cm, đủ sáng, giữ yên 1 giây. Không được thì bấm Chụp ảnh mã.</div></div>
 <div id="bao"></div>
 <div id="in-vung"></div>
 <script>
@@ -680,22 +680,46 @@ function veTQ() {
 var CAM = null, CAM_CUOI = {};
 function napCam(cb) { if (window.Html5Qrcode) return cb(); var s0 = document.createElement("script"); s0.src = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"; s0.onload = cb; s0.onerror = function () { $("cam-chu").textContent = "Không tải được bộ quét, kiểm tra mạng"; }; document.head.appendChild(s0); }
 // che: "ban" / "nhap" quét liên tục (mỗi mã cách nhau 1,5 giây), "mv" quét 1 lần rồi đóng
-function moCam(che) {
-  $("cam-hop").hidden = false; $("cam-chu").textContent = "Đang mở camera…"; CAM_CUOI = {};
+function moCam(che, giu) {
+  $("cam-hop").hidden = false; if (!giu) { $("cam-chu").textContent = "Đang mở camera…"; $("cam-them").innerHTML = ""; CAM_CUOI = {}; }
   napCam(function () {
     var F = window.Html5QrcodeSupportedFormats || {};
     var dinhDang = ["EAN_13", "EAN_8", "UPC_A", "UPC_E", "CODE_128", "CODE_39", "ITF", "QR_CODE"].map(function (k) { return F[k]; }).filter(function (x) { return x !== undefined; });
     try { CAM = new Html5Qrcode("cam-vung", {formatsToSupport: dinhDang, experimentalFeatures: {useBarCodeDetectorIfSupported: true}, verbose: false}); } catch (e) { $("cam-chu").textContent = "Máy này không hỗ trợ quét"; return; }
-    CAM.start({facingMode: "environment"}, {fps: 12, qrbox: function (w, h) { var r = Math.min(w * 0.85, 360); return {width: r, height: Math.round(r * 0.55)}; }}, function (txt) {
-      var bay = Date.now(); if (CAM_CUOI[txt] && bay - CAM_CUOI[txt] < 1500) return; CAM_CUOI[txt] = bay;
-      if (navigator.vibrate) navigator.vibrate(60);
-      if (che === "mv") { dongCam(); var o = $("h-mv"); if (o) o.value = txt; bao("Đã quét: " + txt); return; }
-      if (che === "nhap") { nhapThem(txt); $("cam-chu").textContent = "Đã thêm: " + txt + " · quét tiếp hoặc Đóng"; return; }
-      var h = S.hang.find(function (x) { return !x.ngung && (x.mv === txt || x.mvl === txt || x.ma === txt); });
-      if (!h) { $("cam-chu").textContent = "Mã " + txt + " chưa có trong danh sách — thêm ở mục Hàng hoá"; return; }
-      TIM = txt; timEnter(); $("cam-chu").textContent = "+ " + h.ten + (h.mvl === txt ? " (cả " + h.dvl + ")" : "") + " · quét tiếp hoặc Đóng";
-    }, function () {}).then(function () { $("cam-chu").textContent = che === "mv" ? "Đưa mã vạch vào khung" : "Quét liên tục — đưa từng món vào khung"; })
-      .catch(function (e) { $("cam-chu").textContent = "Không mở được camera: " + ((e && e.message) || e) + ". Hãy cho phép dùng camera."; });
+    CAM_CHE = che;
+    CAM.start({facingMode: "environment"}, {fps: 15, disableFlip: true,
+        qrbox: function (w, h) { var r = Math.min(w * 0.92, 460); return {width: Math.round(r), height: Math.round(Math.min(h * 0.6, r * 0.6))}; },
+        videoConstraints: {facingMode: "environment", width: {ideal: 1920}, height: {ideal: 1080}, advanced: [{focusMode: "continuous"}]}},
+      function (txt) { quetDuoc(txt, che); }, function () {})
+      .then(function () { if (!giu) $("cam-chu").textContent = che === "mv" ? "Đưa mã vạch vào khung" : "Quét liên tục — đưa từng món vào khung"; })
+      .catch(function (e) { if (giu) return; var m = String((e && e.message) || e); $("cam-chu").textContent = /NotAllowed|Permission/i.test(m) ? "Chưa cho phép dùng camera — vào cài đặt trình duyệt cho phép camera, hoặc bấm Chụp ảnh mã" : /NotFound|device/i.test(m) ? "Máy này không có camera — bấm Chụp ảnh mã hoặc dùng máy quét" : "Không mở được camera (" + m + ") — thử bấm Chụp ảnh mã"; });
+  });
+}
+var CAM_CHE = "ban";
+function quetDuoc(txt, che) {
+  var bay = Date.now(); if (CAM_CUOI[txt] && bay - CAM_CUOI[txt] < 1500) return; CAM_CUOI[txt] = bay;
+  if (navigator.vibrate) navigator.vibrate(60);
+  $("cam-them").innerHTML = "";
+  if (che === "mv") { dongCam(); var o = $("h-mv"); if (o) o.value = txt; bao("Đã quét: " + txt); return; }
+  if (che === "nhap") { nhapThem(txt); $("cam-chu").textContent = "Đã thêm: " + txt + " · quét tiếp hoặc Đóng"; return; }
+  var h = S.hang.find(function (x) { return !x.ngung && (x.mv === txt || x.mvl === txt || x.ma === txt); });
+  if (!h) {
+    $("cam-chu").textContent = "Đã đọc mã " + txt + " nhưng chưa món nào gắn mã này";
+    if (laChu()) $("cam-them").innerHTML = '<button class="btn chinh" data-cam-moi="' + esc(txt) + '">＋ Thêm hàng mới với mã này</button>';
+    return;
+  }
+  TIM = txt; timEnter(); $("cam-chu").textContent = "+ " + h.ten + (h.mvl === txt ? " (cả " + h.dvl + ")" : "") + " · quét tiếp hoặc Đóng";
+}
+// chụp ảnh mã vạch: ảnh nét hơn khung hình video nên đọc chắc hơn
+function quetAnh(tep) {
+  if (!tep) return; $("cam-chu").textContent = "Đang đọc ảnh…";
+  napCam(function () {
+    var chay = CAM; var tiep = function () {
+      var q; try { q = new Html5Qrcode("cam-tep", {verbose: false}); } catch (e) { $("cam-chu").textContent = "Máy này không đọc được ảnh"; return; }
+      q.scanFile(tep, false).then(function (txt) { q.clear(); quetDuoc(txt, CAM_CHE); if (!$("cam-hop").hidden && CAM_CHE !== "mv") moCam(CAM_CHE, true); })
+        .catch(function () { q.clear(); $("cam-chu").textContent = "Chưa đọc được mã trong ảnh — chụp gần hơn, rõ nét, mã nằm ngang"; if (!$("cam-hop").hidden) moCam(CAM_CHE, true); });
+    };
+    if (chay && chay.isScanning) { CAM = null; chay.stop().then(function () { chay.clear(); tiep(); }).catch(tiep); } else tiep();
   });
 }
 function dongCam() { var c = CAM; CAM = null; $("cam-hop").hidden = true; if (c) { try { c.stop().then(function () { c.clear(); }).catch(function () {}); } catch (e) {} } $("cam-vung").innerHTML = ""; if (TRANG === "ban" && $("hop").hidden) ve(); }
@@ -1203,6 +1227,7 @@ function formNV(ma) {
 
 // ---------- sự kiện ----------
 function sau(nut, p, thongBao) { nut.disabled = true; return p.then(function (o) { dongHop(); nhan(o); if (thongBao) bao(thongBao); return o; }).catch(function (e) { nut.disabled = false; loiBao(e); }); }
+document.addEventListener("change", function (e) { if (e.target && e.target.id === "cam-anh") { var tp = e.target.files && e.target.files[0]; e.target.value = ""; quetAnh(tp); } });
 document.addEventListener("click", function (e) {
   var t = e.target, b;
   if ((b = t.closest("[data-pin]"))) { var v = b.dataset.pin; if (v === "ok") thuPin(); else if (v === "⌫") { PIN_GO = PIN_GO.slice(0, -1); chamPin(); } else if (v === "C") { PIN_GO = ""; chamPin(); } else if (PIN_GO.length < 6) { PIN_GO += v; chamPin(); if (PIN_GO.length === 6) thuPin(); } return; }
@@ -1225,6 +1250,7 @@ document.addEventListener("click", function (e) {
   if (t.id === "ca-mo") { sau(t, goi("moCa", +$("ca-dau").value || 0), "Đã mở ca ✓"); return; }
   if (t.id === "ca-dong") { var dem = $("ca-dem").value; if (dem === "") { alert("Nhập số tiền đếm được"); return; } t.disabled = true; goi("dongCa", +dem, $("ca-gc").value).then(function (o) { dongHop(); nhan(o); var c = o.caVua; hop("Đã chốt ca ✓", '<div class="hang-tong"><span class="mo">Két phải có</span><b class="so">' + dd(c.dk) + '</b></div><div class="hang-tong"><span class="mo">Đếm được</span><b class="so">' + dd(c.dem) + '</b></div><div class="phai-tra" style="margin-top:10px;background:' + (c.lech < 0 ? "var(--do)" : "var(--toi)") + '"><span>' + (c.lech < 0 ? "Thiếu" : c.lech > 0 ? "Dư" : "Khớp") + '</span><b class="so">' + dd(Math.abs(c.lech)) + '</b></div><button class="btn chinh lon" data-dong="1">Xong</button>'); }).catch(function (e2) { t.disabled = false; loiBao(e2); }); return; }
   if ((b = t.closest("[data-nhom]"))) { NHOM = b.dataset.nhom; ve(); return; }
+  if ((b = t.closest("[data-cam-moi]"))) { var mvm = b.dataset.camMoi; dongCam(); formHang("", mvm); return; }
   if ((b = t.closest("[data-bot]"))) { botHang(b.dataset.bot); return; }
   if ((b = t.closest("[data-them]"))) { themHang(b.dataset.them); return; }
   if ((b = t.closest("[data-don]"))) { CUR = +b.dataset.don; luuDon(); ve(); return; }
