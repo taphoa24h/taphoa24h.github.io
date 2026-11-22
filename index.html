@@ -1136,14 +1136,14 @@ function quetDuoc(txt, che) {
   if (che === "mv") { dongCam(); var o = $("h-mv"); if (o) o.value = txt; bao("Đã quét: " + txt); return; }
   if (che === "nhap") {
     var co = S.hang.some(function (x) { return x.mv === txt || x.mvl === txt || x.ma === txt; });
-    if (!co) { dongCam(); nhapThem(txt); return; }   // mã mới: đóng camera để hiện form thêm hàng
-    nhapThem(txt); $("cam-chu").textContent = "Đã thêm: " + txt + " · quét tiếp hoặc Đóng"; return;
+    if (!co) { bip(false); dongCam(); nhapThem(txt); return; }   // mã mới: đóng camera để hiện form thêm hàng
+    bip(true); nhapThem(txt); $("cam-chu").textContent = "Đã thêm: " + txt + " · quét tiếp hoặc Đóng"; return;
   }
   var h = S.hang.find(function (x) { return !x.ngung && (x.mv === txt || x.mvl === txt || x.ma === txt); });
   if (!h && $("cam-hop").hidden) { maLa(txt); return; }
   if (!h) {
     $("cam-chu").textContent = "Đã đọc mã " + txt + " nhưng chưa món nào gắn mã này";
-    bip(false); if (laChu()) $("cam-them").innerHTML = '<button class="btn chinh" data-cam-moi="' + esc(txt) + '">＋ Thêm hàng mới</button> <button class="btn trang" data-cam-gan="' + esc(txt) + '">🔗 Gắn cho hàng có sẵn</button>';
+    bip(false); noi("Mã mới, chưa có hàng này"); if (laChu()) $("cam-them").innerHTML = '<button class="btn chinh" data-cam-moi="' + esc(txt) + '">＋ Thêm hàng mới</button> <button class="btn trang" data-cam-gan="' + esc(txt) + '">🔗 Gắn cho hàng có sẵn</button>';
     return;
   }
   TIM = txt; timEnter(); veGioCam(); $("cam-chu").textContent = "+ " + h.ten + (h.mvl === txt ? " (cả " + h.dvl + ")" : "") + " · quét tiếp hoặc Đóng";
@@ -1256,11 +1256,13 @@ function botHang(ma) {
 function nguongBC() { var v = Object.keys(banChay()).map(function (k) { return BC[k]; }).sort(function (a, b) { return b - a; }); return v.length ? v[Math.min(5, v.length - 1)] : 1e9; }   // 6 món bán nhiều nhất
 // tiếng bíp khi quét: đúng = cao ngắn, mã lạ = trầm dài
 var AC = null;
-function bip(ok) { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); var o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = ok ? 1250 : 320; o.type = ok ? "sine" : "square"; g.gain.value = ok ? 0.12 : 0.06; o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + (ok ? 0.07 : 0.22)); } catch (e) {} }
+function bip(ok) { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume();
+  var tieng = function (bd, dai) { var o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + bd; o.frequency.value = ok ? 1250 : 380; o.type = ok ? "sine" : "square"; g.gain.setValueAtTime(ok ? 0.3 : 0.16, t); g.gain.exponentialRampToValueAtTime(0.001, t + dai); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dai + 0.02); };
+  if (ok) tieng(0, 0.09); else { tieng(0, 0.14); tieng(0.2, 0.14); } } catch (e) {} }
 // mã vạch chưa có: thêm hàng mới hoặc gắn cho hàng có sẵn
 var GM_MA = "";
 function maLa(ma) {
-  bip(false);
+  bip(false); noi("Mã mới, chưa có hàng này");
   if (!laChu()) { bao("Mã " + ma + " chưa có trong danh sách — báo chủ tiệm thêm"); return; }
   GM_MA = ma;
   hop("Mã vạch chưa có", '<div class="phai-tra" style="margin-top:-4px"><span>Mã vừa quét</span><b class="so" style="font-size:20px">' + esc(ma) + '</b></div>' +
@@ -1371,7 +1373,13 @@ function docAmNam(n) {
   Promise.all(ds.map(layAm)).then(function (bs) { var t = AC.currentTime + 0.03; bs.forEach(function (b) { var src = AC.createBufferSource(); src.buffer = b; src.connect(AC.destination); src.start(t); AM_DANG.push(src); t += Math.max(0.05, b.duration - 0.03); }); })
     .catch(function () { var u = new SpeechSynthesisUtterance(docSo(n)); u.lang = "vi-VN"; u.pitch = 0.6; try { speechSynthesis.speak(u); } catch (e) {} });
 }
-document.addEventListener("pointerdown", function () { try { if (AC && AC.state === "suspended") AC.resume(); } catch (e) {} }, true);
+function moKhoaAm() {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume();
+    if (!moKhoaAm.xong) { var b = AC.createBuffer(1, 1, 22050), src = AC.createBufferSource(); src.buffer = b; src.connect(AC.destination); src.start(0); } } catch (e) {}
+  if (!moKhoaAm.xong && window.speechSynthesis) { try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} }
+  moKhoaAm.xong = true;
+}
+["pointerdown", "touchend", "keydown", "click"].forEach(function (ev) { document.addEventListener(ev, moKhoaAm, true); });
 function noi(t, ep) {
   if ((!ep && cheDoc() === "tat") || !window.speechSynthesis) return;
   try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "vi-VN"; chonGiong(); if (GIONG) u.voice = GIONG; u.rate = 1.08; u.pitch = GIONG_KHOP ? 1 : (gioiGiong() === "nam" ? 0.7 : 1.25); speechSynthesis.speak(u); } catch (e) {}
@@ -1389,7 +1397,7 @@ function baoGia(ten, gia, q, dv, ma) {
 // còn bán được bao nhiêu = tồn kho - số đã có trong đơn đang làm (món ngoài danh sách thì không giới hạn)
 function conBan(ma) { var h = hang(ma); if (h.khac || String(ma).charAt(0) === "_") return Infinity; var dang = gio().filter(function (x) { return x.ma === ma; }).reduce(function (a, x) { return a + x.sl; }, 0); return Math.round((h.ton - dang) * 1000) / 1000; }
 function hetHang(ma) {
-  var h = hang(ma); bip(false);
+  var h = hang(ma); bip(false); noi("Hết hàng, " + String(h.ten || "").split(/\s+/).slice(0, 4).join(" "));
   thanhNut("⛔ Hết hàng: " + h.ten + " (còn " + soVN(Math.max(0, h.ton)) + " " + (h.dv || "") + ")", laChu() ? "Nhập thêm" : "OK", function () { if (!laChu()) return; NH = null; formNhap(); nhapThem(ma); });
 }
 function themHang(ma, sl) {
