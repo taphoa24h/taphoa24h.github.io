@@ -1239,7 +1239,32 @@ function loaiGiong(v) { var t = String(v.name || "").replace(/vietnam(ese)?|ti�
 function giongVi() { try { return speechSynthesis.getVoices().filter(function (x) { return /^vi/i.test(x.lang); }); } catch (e) { return []; } }
 function chonGiong() { var ds = giongVi(), g = gioiGiong(), k = ds.find(function (x) { return loaiGiong(x) === g; }); GIONG_KHOP = !!k; GIONG = k || ds[0] || null; }
 try { if (window.speechSynthesis) { chonGiong(); speechSynthesis.onvoiceschanged = chonGiong; } } catch (e) {}
-function tenGiong() { chonGiong(); if (!window.speechSynthesis) return "Máy này không hỗ trợ giọng đọc"; if (!GIONG) return "Chưa có giọng tiếng Việt trên máy — dùng giọng mặc định"; return "Đang dùng: " + String(GIONG.name).replace(/\s*[-–(].*$/, "") + (GIONG_KHOP ? "" : " (chỉnh cao độ)"); }
+function tenGiong() { chonGiong(); if (!window.speechSynthesis) return "Máy này không hỗ trợ giọng đọc"; if (dungAmNam()) return "Đang dùng: giọng nam thu sẵn (đọc số tiền)"; if (!GIONG) return "Chưa có giọng tiếng Việt trên máy — dùng giọng mặc định"; if (dungAmNam()) return "Đang dùng: giọng nam thu sẵn (đọc số tiền)"; return "Đang dùng: " + String(GIONG.name).replace(/\s*[-–(].*$/, "") + (GIONG_KHOP ? "" : " (chỉnh cao độ)"); }
+// ---- giọng nam thu sẵn: ghép các đoạn s1..s99, t0..t9 (x trăm), le, nghin, trieu, ty ----
+var AM_GOC = "https://taphoa24h.github.io/am/nam/", AM_BUF = {};
+function dungAmNam() { chonGiong(); return gioiGiong() === "nam" && !GIONG_KHOP; }
+function doanSo(n) {
+  n = Math.round(Math.abs(+n || 0)); if (!n) return ["s0"];
+  var nh = [], ds = [], dvi = ["", "nghin", "trieu", "ty"];
+  while (n > 0) { nh.push(n % 1000); n = Math.floor(n / 1000); }
+  for (var k = nh.length - 1; k >= 0; k--) { var p = nh[k]; if (!p) continue; var du = k < nh.length - 1, tr = Math.floor(p / 100), r = p % 100;
+    if (tr || du) ds.push("t" + tr); if (r) { if (r < 10 && (tr || du)) ds.push("le"); ds.push("s" + r); } if (dvi[k]) ds.push(dvi[k]); }
+  return ds;
+}
+function layAm(ten) {
+  if (AM_BUF[ten]) return Promise.resolve(AM_BUF[ten]);
+  return fetch(AM_GOC + ten + ".wav").then(function (r) { if (!r.ok) throw new Error("thiếu " + ten); return r.arrayBuffer(); })
+    .then(function (b) { return new Promise(function (ok, loi) { AC.decodeAudioData(b, ok, loi); }); }).then(function (bf) { AM_BUF[ten] = bf; return bf; });
+}
+var AM_DANG = [];
+function docAmNam(n) {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); } catch (e) { return; }
+  AM_DANG.forEach(function (x) { try { x.stop(); } catch (e) {} }); AM_DANG = [];
+  var ds = doanSo(n); if (ds[0] === "s0") return;
+  Promise.all(ds.map(layAm)).then(function (bs) { var t = AC.currentTime + 0.03; bs.forEach(function (b) { var src = AC.createBufferSource(); src.buffer = b; src.connect(AC.destination); src.start(t); AM_DANG.push(src); t += Math.max(0.05, b.duration - 0.03); }); })
+    .catch(function () { var u = new SpeechSynthesisUtterance(docSo(n)); u.lang = "vi-VN"; u.pitch = 0.6; try { speechSynthesis.speak(u); } catch (e) {} });
+}
+document.addEventListener("pointerdown", function () { try { if (AC && AC.state === "suspended") AC.resume(); } catch (e) {} }, true);
 function noi(t, ep) {
   if ((!ep && cheDoc() === "tat") || !window.speechSynthesis) return;
   try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "vi-VN"; chonGiong(); if (GIONG) u.voice = GIONG; u.rate = 1.08; u.pitch = GIONG_KHOP ? 1 : (gioiGiong() === "nam" ? 0.7 : 1.25); speechSynthesis.speak(u); } catch (e) {}
@@ -1250,7 +1275,9 @@ function baoGia(ten, gia, q, dv) {
   if (!o) { o = document.createElement("div"); o.id = "gia-to"; document.body.appendChild(o); }
   o.innerHTML = '<div class="gt-ten">' + esc(ten) + '</div><div class="gt-gia">' + so(tong) + "<small>đ</small></div>" + (q !== 1 ? '<div class="gt-sl">' + soVN(q) + " × " + so(gia) + "</div>" : "");
   o.classList.remove("hien"); void o.offsetWidth; o.classList.add("hien"); clearTimeout(GIA_H); GIA_H = setTimeout(function () { o.classList.remove("hien"); }, 1500);
-  var cd = cheDoc(); if (cd !== "tat") noi((cd === "ten" ? ten.split(/\s+/).slice(0, 5).join(" ") + ", " : "") + (q !== 1 ? soVN(q) + " " + (dv || "cái") + ", " : "") + docSo(tong));
+  var cd = cheDoc(); if (cd === "tat") return;
+  if (dungAmNam()) { docAmNam(tong); return; }
+  noi((cd === "ten" ? ten.split(/\s+/).slice(0, 5).join(" ") + ", " : "") + (q !== 1 ? soVN(q) + " " + (dv || "cái") + ", " : "") + docSo(tong));
 }
 function themHang(ma, sl) { var h = hang(ma), d = gio(), x = d.find(function (y) { return y.ma === ma && y.gia === h.gb; }); if (x) x.sl = Math.round((x.sl + (sl || 1)) * 1000) / 1000; else d.push({ma: ma, sl: sl || 1, gia: h.gb}); luuDon(); ve(); }
 function timEnter() {
@@ -1796,7 +1823,7 @@ document.addEventListener("click", function (e) {
   if (t.closest("[data-gm-moi]")) { formHang("", GM_MA); return; }
   if ((b = t.closest("[data-gan-ma]"))) { formHang(b.dataset.ganMa, GM_MA); bao("Bấm Lưu để gắn mã " + GM_MA); return; }
   if (t.closest("[data-doc-bat]")) { var mD = cheDoc() === "tat" ? (lsDoc("th_doc_cu", "gia") || "gia") : "tat"; if (mD === "tat") lsGhi("th_doc_cu", cheDoc()); lsGhi("th_doc", mD); ve(); bao(mD === "tat" ? "🔇 Đã tắt giọng đọc" : "🔊 Đã bật giọng đọc giá"); if (mD !== "tat") noi("Đã bật giọng đọc", true); return; }
-  if (t.closest("[data-doc-thu]")) { var cD = cheDoc(); baoGia("Mì Hảo Hảo tôm chua cay", 5000, 1, "gói"); if (cD === "tat") noi("năm nghìn", true); return; }
+  if (t.closest("[data-doc-thu]")) { var cD = cheDoc(); baoGia("Mì Hảo Hảo tôm chua cay", 5000, 1, "gói"); if (cD === "tat") { if (dungAmNam()) docAmNam(5000); else noi("năm nghìn", true); } return; }
   if (t.closest("[data-xem-kieu]")) { XEM_DS = !XEM_DS; lsGhi("th_xemds", XEM_DS); ve(); return; }
   if (t.closest("[data-mon-khac]")) { hop("Bán món ngoài danh sách", '<p class="mo nho" style="margin-top:-6px">Cho hàng không có trong danh sách: rau, đá, bánh mì, hàng ký gửi… Không trừ kho.</p><label class="f">Tên món (không bắt buộc)<input id="mk-ten" placeholder="VD: Rau muống" autocomplete="off" maxlength="30"></label><label class="f">Giá bán (đ)<input id="mk-gia" type="number" inputmode="numeric" min="0" step="1000" placeholder="0" autofocus></label><div class="mk-goi">' + [5000, 10000, 15000, 20000, 50000].map(function (v) { return '<button data-mk-gia="' + v + '">' + so(v) + "</button>"; }).join("") + '</div><label class="f">Số lượng<input id="mk-sl" type="number" inputmode="decimal" min="0" step="1" value="1"></label><button class="btn chinh lon" id="mk-ok">Thêm vào đơn</button>'); return; }
   if ((b = t.closest("[data-mk-gia]"))) { $("mk-gia").value = b.dataset.mkGia; return; }
@@ -1908,7 +1935,7 @@ document.addEventListener("input", function (e) {
   if (t.id === "kiem-tim" || t.id === "tem-tim") { var q = boDau(t.value), at = t.id === "kiem-tim" ? "data-kiem-dong" : "data-tem-dong"; document.querySelectorAll("[" + at + "]").forEach(function (r) { r.style.display = r.getAttribute(at).indexOf(q) >= 0 ? "" : "none"; }); return; }
 });
 document.addEventListener("change", function (e) {
-  if (e.target && e.target.id === "c-giong") { lsGhi("th_giong", e.target.value); var gt = $("giong-ten"); if (gt) gt.textContent = tenGiong(); noi("năm nghìn", true); return; }
+  if (e.target && e.target.id === "c-giong") { lsGhi("th_giong", e.target.value); var gt = $("giong-ten"); if (gt) gt.textContent = tenGiong(); if (dungAmNam()) docAmNam(35000); else noi("ba mươi lăm nghìn", true); return; }
   if (e.target && e.target.id === "c-doc") { lsGhi("th_doc", e.target.value); if (e.target.value !== "tat") noi(e.target.value === "ten" ? "Mì Hảo Hảo, năm nghìn" : "năm nghìn", true); return; }
   if (e.target && e.target.id === "c-kho") { lsGhi("th_kho", e.target.value); bao("Khổ giấy hoá đơn: " + e.target.value + "mm"); return; }
   if (e.target && e.target.id === "c-tuin") { lsGhi("th_in", e.target.checked); bao(e.target.checked ? "Sẽ tự in sau mỗi lần thu tiền" : "Đã tắt tự in"); return; }
