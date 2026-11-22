@@ -661,6 +661,8 @@ input:focus,select:focus,textarea:focus{border-color:#10b981!important;box-shado
 .chip.doc-nut{font-size:15px;padding-left:11px;padding-right:11px}.chip.doc-nut.bat{background:#ecfdf5;border-color:#a7f3d0}
 
 .xoa-hang{display:block;width:100%;margin-top:10px;background:none;border:0;color:var(--do);font-size:13px;font-weight:600;cursor:pointer;padding:8px;border-radius:10px}.xoa-hang:hover{background:var(--do-n)}
+
+.chup-nut{position:relative;overflow:hidden;height:64px;font-size:18px}.chup-nut input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 </style>
 </head>
 <body>
@@ -1071,8 +1073,15 @@ function laIOSApp() { try { return /iPhone|iPad|iPod/.test(navigator.userAgent) 
 function camKieu() { return lsDoc("th_camkieu", laIOSApp() ? "chup" : "lien"); }
 function chupMa(che) {
   CAM_CHE = che; CAM_CUOI = {};
-  var o = $("cam-chup"); if (!o) { o = document.createElement("input"); o.type = "file"; o.accept = "image/*"; o.setAttribute("capture", "environment"); o.id = "cam-chup"; o.hidden = true; document.body.appendChild(o); }
-  o.value = ""; o.click();
+  if (che === "mv") {   // đang ở form hàng: không mở hộp mới (sẽ mất form) -> mở camera gốc luôn
+    var o = $("cam-chup-mv"); if (!o) { o = document.createElement("input"); o.type = "file"; o.accept = "image/*"; o.setAttribute("capture", "environment"); o.id = "cam-chup-mv"; o.style.cssText = "position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0"; document.body.appendChild(o); }
+    o.value = ""; o.click(); return;
+  }
+  var giu = NH;   // giữ phiếu nhập đang làm
+  hop("Quét mã bằng camera", '<label class="btn chinh lon chup-nut">📷 Chụp ảnh mã vạch<input type="file" accept="image/*" capture="environment" id="cam-chup"></label>' +
+    '<p class="mo nho" style="text-align:center;margin:8px 0 14px">Chụp gần (10–20 cm), đủ sáng, mã nằm ngang → bấm "Dùng ảnh"</p>' +
+    '<button class="btn lon" data-cam-lien="' + esc(che) + '">Quét trực tiếp bằng camera</button><p class="mo nho" style="text-align:center;margin-top:6px">Quét trực tiếp nhanh hơn nhưng iPhone có thể hỏi quyền camera.</p>');
+  if (giu) NH = giu;
 }
 function quetAnh(tep) {
   if (!tep) return; $("cam-chu").textContent = "Đang đọc ảnh…"; dungCam_();
@@ -1081,9 +1090,15 @@ function quetAnh(tep) {
   napCam(function () {
     var url = URL.createObjectURL(tep), img = new Image();
     img.onload = function () {
-      var k = Math.min(1, 2000 / Math.max(img.naturalWidth, img.naturalHeight)), cv = document.createElement("canvas");
-      cv.width = Math.round(img.naturalWidth * k); cv.height = Math.round(img.naturalHeight * k); cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(url);
-      BD.detect(cv).then(function (kq) { if (kq && kq.length) { CAM_CUOI = {}; quetDuoc(String(kq[0].rawValue), CAM_CHE); moLai(); } else hong(); }).catch(hong);
+      URL.revokeObjectURL(url);
+      var W = img.naturalWidth, H = img.naturalHeight, thu = [[2600, 0], [1600, 0], [1000, 0], [1600, 90], [2600, 90]];
+      var lan = function (i) {
+        if (i >= thu.length) return hong();
+        var k = Math.min(1, thu[i][0] / Math.max(W, H)), w = Math.round(W * k), h = Math.round(H * k), xoay = thu[i][1], cv = document.createElement("canvas"), g = cv.getContext("2d");
+        if (xoay) { cv.width = h; cv.height = w; g.translate(h / 2, w / 2); g.rotate(Math.PI / 2); g.drawImage(img, -w / 2, -h / 2, w, h); } else { cv.width = w; cv.height = h; g.drawImage(img, 0, 0, w, h); }
+        BD.detect(cv).then(function (kq) { if (kq && kq.length) { CAM_CUOI = {}; quetDuoc(String(kq[0].rawValue), CAM_CHE); moLai(); } else lan(i + 1); }).catch(function () { lan(i + 1); });
+      };
+      lan(0);
     };
     img.onerror = function () { URL.revokeObjectURL(url); hong(); }; img.src = url;
   });
@@ -1794,7 +1809,7 @@ function formNV(ma) {
 
 // ---------- sự kiện ----------
 function sau(nut, p, thongBao) { nut.disabled = true; return p.then(function (o) { dongHop(); nhan(o); if (thongBao) bao(thongBao); return o; }).catch(function (e) { nut.disabled = false; loiBao(e); }); }
-document.addEventListener("change", function (e) { if (e.target && e.target.id === "cam-chup") { var tc = e.target.files && e.target.files[0]; if (tc) { bao("Đang đọc mã…"); quetAnh(tc); } return; } if (e.target && e.target.id === "cam-anh") { var tp = e.target.files && e.target.files[0]; e.target.value = ""; quetAnh(tp); } });
+document.addEventListener("change", function (e) { if (e.target && e.target.id === "cam-chup-mv") { var tm = e.target.files && e.target.files[0]; if (tm) { bao("Đang đọc mã…"); quetAnh(tm); } return; } if (e.target && e.target.id === "cam-chup") { var tc = e.target.files && e.target.files[0]; if (tc) { var nhG = NH; $("hop").hidden = true; if (CAM_CHE === "nhap" && nhG) { NH = nhG; formNhap(); } bao("Đang đọc mã…"); quetAnh(tc); } return; } if (e.target && e.target.id === "cam-anh") { var tp = e.target.files && e.target.files[0]; e.target.value = ""; quetAnh(tp); } });
 document.addEventListener("click", function (e) {
   var t = e.target, b;
   if ((b = t.closest("[data-pin]"))) { var v = b.dataset.pin; if (v === "ok") thuPin(); else if (v === "⌫") { PIN_GO = PIN_GO.slice(0, -1); chamPin(); } else if (v === "C") { PIN_GO = ""; chamPin(); } else if (PIN_GO.length < 6) { PIN_GO += v; chamPin(); if (PIN_GO.length === 6) thuPin(); } return; }
@@ -1809,6 +1824,7 @@ document.addEventListener("click", function (e) {
   if (t.closest("[data-ng-doi]")) { var m1 = $("menu-ng"); if (m1) m1.remove(); if (choDS().length && !confirm("Còn đơn bán lúc mất mạng chưa gửi. Vẫn đổi người?")) return; try { localStorage.removeItem("th_snap"); } catch (er) {} DN = {}; dnGhi(null); DN_CHON = null; S = null; dongHop(); moDN(); return; }
   if (t.closest("[data-ng-pin]")) { var m2 = $("menu-ng"); if (m2) m2.remove(); if (!laChu()) { alert("Nhờ chủ tiệm đổi mã PIN cho bạn trong Cài đặt → Người bán hàng."); return; } TRANG = "cd"; ve(); setTimeout(function () { var nb = document.querySelector('[data-nv="' + S.u.ma + '"]'); if (nb) nb.click(); }, 60); return; }
   if (t.closest("[data-in-thu]")) { var hdG = (S.hd || []).find(function (x) { return x.so.indexOf("HD") === 0; }); if (!hdG) { alert("Chưa có hoá đơn nào để in thử"); return; } inHD(hdG.so); return; }
+  if ((b = t.closest("[data-cam-lien]"))) { var cL = b.dataset.camLien, nhL = NH; $("hop").hidden = true; if (cL === "nhap" && nhL) { NH = nhL; formNhap(); } moCam(cL); return; }
   if (t.closest("[data-hoan]")) { var fH = HOAN_FN; HOAN_FN = null; var oH = $("hoan"); if (oH) oH.classList.remove("hien"); if (fH) fH(); return; }
   if (t.closest("[data-ghi-no]")) { if (!gio().length) return; TT = {cach: "no", giam: 0, dua: 0, khach: "", sdt: ""}; veTT(); setTimeout(function () { var k = $("tt-khach"); if (k) k.focus(); }, 80); return; }
   if (t.closest("[data-hd-them]")) { var oT = $("hd-them"); if (oT) oT.hidden = !oT.hidden; return; }
