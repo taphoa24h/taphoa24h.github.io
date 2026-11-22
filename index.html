@@ -1055,6 +1055,7 @@ function quetDuoc(txt, che) {
     nhapThem(txt); $("cam-chu").textContent = "Đã thêm: " + txt + " · quét tiếp hoặc Đóng"; return;
   }
   var h = S.hang.find(function (x) { return !x.ngung && (x.mv === txt || x.mvl === txt || x.ma === txt); });
+  if (!h && $("cam-hop").hidden) { maLa(txt); return; }
   if (!h) {
     $("cam-chu").textContent = "Đã đọc mã " + txt + " nhưng chưa món nào gắn mã này";
     bip(false); if (laChu()) $("cam-them").innerHTML = '<button class="btn chinh" data-cam-moi="' + esc(txt) + '">＋ Thêm hàng mới</button> <button class="btn trang" data-cam-gan="' + esc(txt) + '">🔗 Gắn cho hàng có sẵn</button>';
@@ -1063,10 +1064,18 @@ function quetDuoc(txt, che) {
   TIM = txt; timEnter(); $("cam-chu").textContent = "+ " + h.ten + (h.mvl === txt ? " (cả " + h.dvl + ")" : "") + " · quét tiếp hoặc Đóng";
 }
 // chụp ảnh mã vạch: ảnh nét hơn khung hình video nên đọc chắc hơn
+// cách quét: "lien" = quét trực tiếp (cần cho phép camera) | "chup" = chụp ảnh mã bằng camera gốc (không cần quyền)
+function laIOSApp() { try { return /iPhone|iPad|iPod/.test(navigator.userAgent) && (navigator.standalone || matchMedia("(display-mode: standalone)").matches); } catch (e) { return false; } }
+function camKieu() { return lsDoc("th_camkieu", laIOSApp() ? "chup" : "lien"); }
+function chupMa(che) {
+  CAM_CHE = che; CAM_CUOI = {};
+  var o = $("cam-chup"); if (!o) { o = document.createElement("input"); o.type = "file"; o.accept = "image/*"; o.setAttribute("capture", "environment"); o.id = "cam-chup"; o.hidden = true; document.body.appendChild(o); }
+  o.value = ""; o.click();
+}
 function quetAnh(tep) {
   if (!tep) return; $("cam-chu").textContent = "Đang đọc ảnh…"; dungCam_();
   var moLai = function () { if (!$("cam-hop").hidden && CAM_CHE !== "mv") moCam(CAM_CHE, true); };
-  var hong = function () { $("cam-chu").textContent = "Chưa đọc được mã trong ảnh — chụp gần hơn, rõ nét, mã nằm ngang"; moLai(); };
+  var hong = function () { $("cam-chu").textContent = "Chưa đọc được mã trong ảnh — chụp gần hơn, rõ nét, mã nằm ngang"; if ($("cam-hop").hidden) { bip(false); bao("Chưa đọc được mã — chụp gần hơn, rõ nét, mã nằm ngang"); } moLai(); };
   napCam(function () {
     var url = URL.createObjectURL(tep), img = new Image();
     img.onload = function () {
@@ -1760,6 +1769,7 @@ function veCD() {
   var c = S.cd;
   return '<div class="tieu-de"><h2>Cài đặt</h2></div><div class="luoi2"><div class="the"><h2>Thông tin tiệm <small>in trên hoá đơn</small></h2><label class="f">Tên tiệm<input id="c-ten" value="' + esc(c.tenTiem) + '"></label><label class="f">Địa chỉ<input id="c-dc" value="' + esc(c.diaChi) + '"></label><label class="f">Số điện thoại<input id="c-sdt" value="' + esc(c.sdt) + '"></label><label class="f">Lời cảm ơn cuối hoá đơn<input id="c-loi" value="' + esc(c.loiCam) + '"></label>' +
     '<div class="in-cd"><b>🔊 Giọng đọc khi quét mã</b> <small class="mo">(cài riêng cho máy này)</small><div class="hai" style="margin-top:8px"><label class="f">Đọc gì<select id="c-doc"><option value="gia"' + (cheDoc() === "gia" ? " selected" : "") + '>Đọc giá (VD: "năm nghìn")</option><option value="ten"' + (cheDoc() === "ten" ? " selected" : "") + '>Đọc tên hàng + giá</option><option value="tat"' + (cheDoc() === "tat" ? " selected" : "") + '>Tắt giọng đọc</option></select></label><span style="align-self:end;padding-bottom:10px"><button class="btn nho" type="button" data-doc-thu="1">▶ Nghe thử</button></span></div><div class="hai"><label class="f">Giọng đọc<select id="c-giong"><option value="nu"' + (gioiGiong() === "nu" ? " selected" : "") + '>👩 Giọng nữ</option><option value="nam"' + (gioiGiong() === "nam" ? " selected" : "") + '>👨 Giọng nam</option></select></label><small class="mo" id="giong-ten" style="align-self:end;padding-bottom:12px">' + tenGiong() + '</small></div><small class="mo">Khi quét mã: hiện giá thật to giữa màn hình và đọc số tiền.</small></div>' +
+    '<div class="in-cd"><b>📷 Quét mã bằng camera</b> <small class="mo">(cài riêng cho máy này)</small><label class="f" style="margin-top:8px">Cách quét<select id="c-camkieu"><option value="chup"' + (camKieu() === "chup" ? " selected" : "") + '>Chụp ảnh mã — không phải cho phép camera (hợp iPhone)</option><option value="lien"' + (camKieu() === "lien" ? " selected" : "") + '>Quét trực tiếp — nhanh, nhưng iPhone hay hỏi quyền</option></select></label><small class="mo">Chụp ảnh mã: bấm nút camera → chụp mã vạch → bấm "Dùng ảnh" là món vào đơn.</small></div>' +
     '<div class="in-cd"><b>🖨 In hoá đơn</b> <small class="mo">(cài riêng cho máy này)</small><div class="hai" style="margin-top:8px"><label class="f">Khổ giấy máy in<select id="c-kho"><option value="58"' + (lsDoc("th_kho", "58") === "58" ? " selected" : "") + '>58mm (máy in nhỏ)</option><option value="80"' + (lsDoc("th_kho", "58") === "80" ? " selected" : "") + '>80mm (máy in lớn)</option></select></label><label class="ck" style="align-self:center;margin:14px 0 0"><input type="checkbox" id="c-tuin"' + (lsDoc("th_in", false) ? " checked" : "") + '> Tự in sau mỗi lần thu tiền</label></div><button class="btn nho" type="button" data-in-thu="1">In thử hoá đơn gần nhất</button></div>' +
     '<h2 style="margin-top:18px">Nhận chuyển khoản (mã QR)</h2><div class="hai"><label class="f">Ngân hàng<input id="c-nh" value="' + esc(c.nh) + '" placeholder="VCB, MB, TCB, ICB, BIDV…"></label><label class="f">Số tài khoản<input id="c-stk" value="' + esc(c.stk) + '"></label></div><label class="f">Tên chủ tài khoản<input id="c-tentk" value="' + esc(c.tenTK) + '" placeholder="NGUYEN VAN A"></label>' +
     '<h2 style="margin-top:18px">Tích điểm khách quen <small>bỏ trống = tắt</small></h2><div class="hai"><label class="f">Mua bao nhiêu đồng được 1 điểm<input id="c-diem" type="number" inputmode="numeric" min="0" value="' + (c.diem || "") + '" placeholder="VD: 10000"></label><label class="f">1 điểm đổi được (đồng)<input id="c-giadiem" type="number" inputmode="numeric" min="0" value="' + (c.giaDiem || "") + '" placeholder="VD: 100"></label></div><p class="mo nho" style="margin-top:-4px">Khách có số điện thoại mới được tích điểm. Ví dụ 10.000đ = 1 điểm, 1 điểm = 100đ: mua 100.000đ được 10 điểm = giảm 1.000đ lần sau.</p>' +
@@ -1781,7 +1791,7 @@ function formNV(ma) {
 
 // ---------- sự kiện ----------
 function sau(nut, p, thongBao) { nut.disabled = true; return p.then(function (o) { dongHop(); nhan(o); if (thongBao) bao(thongBao); return o; }).catch(function (e) { nut.disabled = false; loiBao(e); }); }
-document.addEventListener("change", function (e) { if (e.target && e.target.id === "cam-anh") { var tp = e.target.files && e.target.files[0]; e.target.value = ""; quetAnh(tp); } });
+document.addEventListener("change", function (e) { if (e.target && e.target.id === "cam-chup") { var tc = e.target.files && e.target.files[0]; if (tc) { bao("Đang đọc mã…"); quetAnh(tc); } return; } if (e.target && e.target.id === "cam-anh") { var tp = e.target.files && e.target.files[0]; e.target.value = ""; quetAnh(tp); } });
 document.addEventListener("click", function (e) {
   var t = e.target, b;
   if ((b = t.closest("[data-pin]"))) { var v = b.dataset.pin; if (v === "ok") thuPin(); else if (v === "⌫") { PIN_GO = PIN_GO.slice(0, -1); chamPin(); } else if (v === "C") { PIN_GO = ""; chamPin(); } else if (PIN_GO.length < 6) { PIN_GO += v; chamPin(); if (PIN_GO.length === 6) thuPin(); } return; }
@@ -1813,7 +1823,7 @@ document.addEventListener("click", function (e) {
   if (t.closest("[data-doi-nguoi]")) { if (!confirm("Đăng xuất? Lần sau phải nhập lại mã PIN.")) return; dangXuat(); return; }
   if (t.closest("[data-ca]")) { formCa(); return; }
   if (t.closest("[data-tim-nhanh]")) { moTim(); return; }
-  if ((b = t.closest("[data-cam]"))) { e.preventDefault(); if (b.dataset.cam === "nhap") nhoNhap(); moCam(b.dataset.cam); return; }
+  if ((b = t.closest("[data-cam]"))) { e.preventDefault(); if (b.dataset.cam === "nhap") nhoNhap(); if (camKieu() === "chup") { chupMa(b.dataset.cam); return; } moCam(b.dataset.cam); return; }
   if (t.closest("[data-cam-dong]")) { dongCam(); return; }
   if ((b = t.closest("[data-tk]"))) { chonTim(+b.dataset.tk); return; }
   if (t.id === "ca-mo") { sau(t, goi("moCa", +$("ca-dau").value || 0), "Đã mở ca ✓"); return; }
@@ -1935,6 +1945,7 @@ document.addEventListener("input", function (e) {
   if (t.id === "kiem-tim" || t.id === "tem-tim") { var q = boDau(t.value), at = t.id === "kiem-tim" ? "data-kiem-dong" : "data-tem-dong"; document.querySelectorAll("[" + at + "]").forEach(function (r) { r.style.display = r.getAttribute(at).indexOf(q) >= 0 ? "" : "none"; }); return; }
 });
 document.addEventListener("change", function (e) {
+  if (e.target && e.target.id === "c-camkieu") { lsGhi("th_camkieu", e.target.value); bao(e.target.value === "chup" ? "📷 Nút camera sẽ mở chụp ảnh mã" : "📷 Nút camera sẽ quét trực tiếp"); return; }
   if (e.target && e.target.id === "c-giong") { lsGhi("th_giong", e.target.value); var gt = $("giong-ten"); if (gt) gt.textContent = tenGiong(); if (dungAmNam()) docAmNam(35000); else noi("ba mươi lăm nghìn", true); return; }
   if (e.target && e.target.id === "c-doc") { lsGhi("th_doc", e.target.value); if (e.target.value !== "tat") noi(e.target.value === "ten" ? "Mì Hảo Hảo, năm nghìn" : "năm nghìn", true); return; }
   if (e.target && e.target.id === "c-kho") { lsGhi("th_kho", e.target.value); bao("Khổ giấy hoá đơn: " + e.target.value + "mm"); return; }
