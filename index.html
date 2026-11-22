@@ -702,6 +702,7 @@ body.man-khach{background:#04110b!important;color:#e8f5ee;margin:0}body.man-khac
 .ky-dong{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ky-dong input,.ky-dong select{flex:1;min-width:120px;width:auto}
 .ky-tai{background:#fff8e6;border:1px solid #f5d48a;color:#7a5200;border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:13.5px;display:flex;gap:10px;align-items:center}
 .ky-tai.loi{background:#fdecec;border-color:#f3b4b4;color:#9b1c1c}
+.ton.lay-het{color:var(--do)!important;font-weight:700}
 </style>
 </head>
 <body>
@@ -1229,10 +1230,10 @@ function veBan() {
   var trai = '<div class="ban-dau"><div class="timbox">' + IC.tim + '<input id="tim" placeholder="Tìm tên hàng hoặc quét mã vạch…" value="' + esc(TIM) + '" autocomplete="off">' + (window.CO_CAM ? '<button class="cam-nut" data-cam="ban" title="Quét mã bằng camera">' + IC.cam + "</button>" : '<kbd class="an-dt">F2</kbd>') + "</div>" +
     '<div class="chips"><button class="chip mon-khac" data-mon-khac="1">＋ Món khác</button><button class="chip doc-nut' + (cheDoc() === "tat" ? "" : " bat") + '" data-doc-bat="1" title="Giọng đọc giá khi quét">' + (cheDoc() === "tat" ? "🔇" : "🔊") + '</button><button class="chip xem-kieu" data-xem-kieu="1" title="Đổi kiểu xem">' + (XEM_DS ? "▦ Lưới" : "☰ Danh sách") + "</button>" + nhom.map(function (n) { return '<button class="chip' + (n === NHOM ? " on" : "") + '" data-nhom="' + esc(n) + '">' + esc(n) + "</button>"; }).join("") + "</div></div>" +
     (loc.length ? XEM_DS ? dsBan(loc, dem) : '<div class="luoi">' + loc.map(function (h) {
-      var it = h.min > 0 && h.ton <= h.min && h.ton > 0, bcN = banChay()[h.ma] || 0, top = !TIM && bcN > 0 && bcN >= nguongBC();
+      var con = Math.round((h.ton - (dem[h.ma] || 0)) * 1000) / 1000, it = h.min > 0 && con <= h.min && con > 0, bcN = banChay()[h.ma] || 0, top = !TIM && bcN > 0 && bcN >= nguongBC();
       return '<button class="sp' + (h.ton <= 0 ? " het" : "") + '" data-them="' + esc(h.ma) + '">' + (dem[h.ma] ? '<span class="bot-gio" data-bot="' + esc(h.ma) + '" title="Bấm nhầm? Bớt 1" role="button" aria-label="Bớt 1 ' + esc(h.ten) + '">−</span><span class="sl-gio">' + soVN(dem[h.ma]) + "</span>" : "") +
         '<span class="anh" style="' + (ANH[h.ma] ? "background:#f3f6f4" : nenHang(h)) + '">' + (ANH[h.ma] ? '<img src="' + ANH[h.ma] + '" alt="">' : esc(chuTat(h.ten))) + (h.ton <= 0 ? '<span class="het-phu"><span>Hết hàng</span></span>' : "") + (top ? '<span class="bc-tag">🔥<i> Bán chạy</i></span>' : "") + "</span>" +
-        '<span class="tt"><span class="ten">' + esc(h.ten) + '</span><span class="duoi"><span class="gia">' + so(h.gb) + 'đ</span><span class="ton' + (it ? " it" : "") + '">' + (h.ton > 0 ? "còn " + soVN(h.ton) : "") + "</span></span></span></button>"; }).join("") + "</div>"
+        '<span class="tt"><span class="ten">' + esc(h.ten) + '</span><span class="duoi"><span class="gia">' + so(h.gb) + 'đ</span><span class="ton' + (it ? " it" : "") + (h.ton > 0 && con <= 0 ? " lay-het" : "") + '">' + (h.ton > 0 ? (con > 0 ? "còn " + soVN(con) : "Đã lấy hết") : "") + "</span></span></span></button>"; }).join("") + "</div>"
       : '<div class="the trong">Không thấy hàng nào' + (TIM ? ' khớp "' + esc(TIM) + '"' + (laChu() ? '<br><br><button class="btn" data-hang-moi="' + esc(TIM) + '">' + IC.cong + "Thêm mặt hàng mới</button>" : "") : "") + "</div>");
   var tabs = DON.map(function (x, i) { var n = x.d.length; return '<button class="' + (i === CUR ? "on" : "") + '" data-don="' + i + '">Đơn ' + (i + 1) + (n ? " · " + n : "") + "</button>"; }).join("") + '<button data-don-moi="1" title="Thêm đơn chờ">＋ Đơn chờ</button>';
   var phai = '<div class="gio-khung"><div class="gio-dau"><h3>Đơn hàng</h3>' + (d.length ? '<span class="tag c-xanh">' + soVN(slTong) + " sản phẩm</span>" : "") + '</div><div class="don-tabs">' + tabs + '</div><div class="gio-ds">' +
@@ -1279,9 +1280,9 @@ var XEM_DS = !!lsDoc("th_xemds", false);
 function dsBan(loc, dem) {
   var bc = banChay(), ng = nguongBC();
   return '<div class="ds-ban">' + loc.map(function (h) {
-    var n = dem[h.ma] || 0, top = !TIM && (bc[h.ma] || 0) > 0 && bc[h.ma] >= ng;
+    var n = dem[h.ma] || 0, con = Math.round((h.ton - n) * 1000) / 1000, top = !TIM && (bc[h.ma] || 0) > 0 && bc[h.ma] >= ng;
     return '<div class="dsb' + (n ? " co" : "") + (h.ton <= 0 ? " het" : "") + '" data-them="' + esc(h.ma) + '">' + thumb(h) +
-      '<div class="nd"><b>' + esc(h.ten) + "</b><small>" + (h.ton > 0 ? "còn " + soVN(h.ton) + " " + esc(h.dv || "") : '<span class="do-chu">Hết hàng</span>') + (top ? ' · <span class="bc-chu">🔥 bán chạy</span>' : "") + "</small></div>" +
+      '<div class="nd"><b>' + esc(h.ten) + "</b><small>" + (h.ton > 0 ? (con > 0 ? "còn " + soVN(con) + " " + esc(h.dv || "") : '<span class="do-chu">Đã lấy hết ' + soVN(h.ton) + " " + esc(h.dv || "") + "</span>") : '<span class="do-chu">Hết hàng</span>') + (top ? ' · <span class="bc-chu">🔥 bán chạy</span>' : "") + "</small></div>" +
       '<b class="gia">' + so(h.gb) + "</b>" +
       (n ? '<span class="sl"><button data-bot="' + esc(h.ma) + '" aria-label="Bớt">−</button><span class="so" data-sl-hoi="' + esc(h.ma) + '" title="Chạm để gõ số lượng">' + soVN(n) + '</span><button data-them="' + esc(h.ma) + '" aria-label="Thêm">+</button></span>' : '<button class="them1" data-them="' + esc(h.ma) + '" aria-label="Thêm">+</button>') + "</div>";
   }).join("") + "</div>";
