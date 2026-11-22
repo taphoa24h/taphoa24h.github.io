@@ -1136,14 +1136,14 @@ function quetDuoc(txt, che) {
   if (che === "mv") { dongCam(); var o = $("h-mv"); if (o) o.value = txt; bao("Đã quét: " + txt); return; }
   if (che === "nhap") {
     var co = S.hang.some(function (x) { return x.mv === txt || x.mvl === txt || x.ma === txt; });
-    if (!co) { bip(false); dongCam(); nhapThem(txt); return; }   // mã mới: đóng camera để hiện form thêm hàng
-    bip(true); nhapThem(txt); $("cam-chu").textContent = "Đã thêm: " + txt + " · quét tiếp hoặc Đóng"; return;
+    if (!co) { dongCam(); nhapThem(txt); return; }   // mã mới: đóng camera để hiện form thêm hàng
+    nhapThem(txt); $("cam-chu").textContent = "Đã thêm: " + txt + " · quét tiếp hoặc Đóng"; return;
   }
   var h = S.hang.find(function (x) { return !x.ngung && (x.mv === txt || x.mvl === txt || x.ma === txt); });
   if (!h && $("cam-hop").hidden) { maLa(txt); return; }
   if (!h) {
     $("cam-chu").textContent = "Đã đọc mã " + txt + " nhưng chưa món nào gắn mã này";
-    bip(false); noi("Mã mới, chưa có hàng này"); if (laChu()) $("cam-them").innerHTML = '<button class="btn chinh" data-cam-moi="' + esc(txt) + '">＋ Thêm hàng mới</button> <button class="btn trang" data-cam-gan="' + esc(txt) + '">🔗 Gắn cho hàng có sẵn</button>';
+    bip(false); if (laChu()) $("cam-them").innerHTML = '<button class="btn chinh" data-cam-moi="' + esc(txt) + '">＋ Thêm hàng mới</button> <button class="btn trang" data-cam-gan="' + esc(txt) + '">🔗 Gắn cho hàng có sẵn</button>';
     return;
   }
   TIM = txt; timEnter(); veGioCam(); $("cam-chu").textContent = "+ " + h.ten + (h.mvl === txt ? " (cả " + h.dvl + ")" : "") + " · quét tiếp hoặc Đóng";
@@ -1258,11 +1258,12 @@ function nguongBC() { var v = Object.keys(banChay()).map(function (k) { return B
 var AC = null;
 function bip(ok) { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume();
   var tieng = function (bd, dai) { var o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + bd; o.frequency.value = ok ? 1250 : 380; o.type = ok ? "sine" : "square"; g.gain.setValueAtTime(ok ? 0.3 : 0.16, t); g.gain.exponentialRampToValueAtTime(0.001, t + dai); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dai + 0.02); };
+  if (ok === "canh") { [0, 0.16, 0.32].forEach(function (bd, i) { var o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + bd; o.type = "square"; o.frequency.value = i % 2 ? 620 : 980; g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.14); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + 0.16); }); return; }
   if (ok) tieng(0, 0.09); else { tieng(0, 0.14); tieng(0.2, 0.14); } } catch (e) {} }
 // mã vạch chưa có: thêm hàng mới hoặc gắn cho hàng có sẵn
 var GM_MA = "";
 function maLa(ma) {
-  bip(false); noi("Mã mới, chưa có hàng này");
+  bip(false);
   if (!laChu()) { bao("Mã " + ma + " chưa có trong danh sách — báo chủ tiệm thêm"); return; }
   GM_MA = ma;
   hop("Mã vạch chưa có", '<div class="phai-tra" style="margin-top:-4px"><span>Mã vừa quét</span><b class="so" style="font-size:20px">' + esc(ma) + '</b></div>' +
@@ -1397,7 +1398,7 @@ function baoGia(ten, gia, q, dv, ma) {
 // còn bán được bao nhiêu = tồn kho - số đã có trong đơn đang làm (món ngoài danh sách thì không giới hạn)
 function conBan(ma) { var h = hang(ma); if (h.khac || String(ma).charAt(0) === "_") return Infinity; var dang = gio().filter(function (x) { return x.ma === ma; }).reduce(function (a, x) { return a + x.sl; }, 0); return Math.round((h.ton - dang) * 1000) / 1000; }
 function hetHang(ma) {
-  var h = hang(ma); bip(false); noi("Hết hàng, " + String(h.ten || "").split(/\s+/).slice(0, 4).join(" "));
+  var h = hang(ma); bip("canh"); noi("Hết hàng, " + String(h.ten || "").split(/\s+/).slice(0, 4).join(" "));
   thanhNut("⛔ Hết hàng: " + h.ten + " (còn " + soVN(Math.max(0, h.ton)) + " " + (h.dv || "") + ")", laChu() ? "Nhập thêm" : "OK", function () { if (!laChu()) return; NH = null; formNhap(); nhapThem(ma); });
 }
 function themHang(ma, sl) {
@@ -1818,6 +1819,7 @@ function nhapThem(t) {
   if (h) laThung = true; else h = S.hang.find(function (x) { return x.mv === t || x.ma.toLowerCase() === t.toLowerCase() || x.ten === t; });
   if (h && !laThung && h.qd > 1 && h.mv !== t) laThung = true;   // gõ tên: mặc định nhập theo thùng
   if (!h) { var b = boDau(t), l = S.hang.filter(function (x) { return !x.ngung && boDau(x.ten).indexOf(b) >= 0; }); if (l.length === 1) h = l[0]; }
+  if (h) bip(true); else if (/^\d{6,}$/.test(t)) bip(false);   // nhập hàng: chỉ bíp, không đọc
   if (!h) {
     nhoNhap();
     if (/^\d{6,}$/.test(t) && confirm("Mã vạch " + t + " chưa có trong danh sách.\nThêm mặt hàng mới rồi đưa luôn vào phiếu nhập?")) { NH_TAM = NH; formHang("", t); return; }
