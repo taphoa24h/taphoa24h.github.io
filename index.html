@@ -278,7 +278,7 @@ label.ck{display:flex;gap:9px;align-items:center;margin:8px 0;cursor:pointer}lab
 .cam-nut svg{width:21px;height:21px;position:static;transform:none;color:inherit}
 #cam-hop{position:fixed;inset:0;z-index:70;background:rgba(5,12,9,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:14px}
 #cam-hop[hidden]{display:none}
-#cam-vung{width:min(460px,100%);border-radius:16px;overflow:hidden;background:#000;min-height:260px}
+#cam-vung{width:min(460px,100%);border-radius:16px;overflow:hidden;background:#000;min-height:260px;position:relative}#cam-vung video{width:100%;display:block}.cam-khung{position:absolute;left:7%;right:7%;top:28%;bottom:28%;border:3px solid #34d399;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}
 #cam-hop .chu{color:#d1e7dc;font-size:14px;text-align:center;min-height:20px}
 #cam-hop .btn{min-width:150px}#cam-hop .cam-nuts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}#cam-them:empty{display:none}
 /* ĐĂNG NHẬP (v6) */
@@ -677,27 +677,52 @@ function veTQ() {
     "</div></div>";
 }
 // ===== QUÉT MÃ BẰNG CAMERA (app riêng) =====
-var CAM = null, CAM_CUOI = {};
-function napCam(cb) { if (window.Html5Qrcode) return cb(); var s0 = document.createElement("script"); s0.src = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"; s0.onload = cb; s0.onerror = function () { $("cam-chu").textContent = "Không tải được bộ quét, kiểm tra mạng"; }; document.head.appendChild(s0); }
+var CAM = null, CAM_CUOI = {}, BD = null;
+function napCam(cb) {
+  if (BD) return cb();
+  var FM = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf", "qr_code"];
+  var tao = function (K) { try { BD = new K({formats: FM}); } catch (e) { BD = new K(); } cb(); };
+  var poly = function () {
+    if (window.BarcodeDetectionAPI) return tao(BarcodeDetectionAPI.BarcodeDetector);
+    var s0 = document.createElement("script"); s0.src = "https://cdn.jsdelivr.net/npm/barcode-detector@3.0.8/dist/iife/ponyfill.js";
+    s0.onload = function () { tao(BarcodeDetectionAPI.BarcodeDetector); }; s0.onerror = function () { $("cam-chu").textContent = "Không tải được bộ quét, kiểm tra mạng"; };
+    document.head.appendChild(s0);
+  };
+  if (window.BarcodeDetector && BarcodeDetector.getSupportedFormats) BarcodeDetector.getSupportedFormats().then(function (f) { if (f.indexOf("ean_13") >= 0) tao(window.BarcodeDetector); else poly(); }).catch(poly); else poly();
+}
 // che: "ban" / "nhap" quét liên tục (mỗi mã cách nhau 1,5 giây), "mv" quét 1 lần rồi đóng
 function moCam(che, giu) {
-  $("cam-hop").hidden = false; if (!giu) { $("cam-chu").textContent = "Đang mở camera…"; $("cam-them").innerHTML = ""; CAM_CUOI = {}; }
+  $("cam-hop").hidden = false; CAM_CHE = che;
+  if (!giu) { $("cam-chu").textContent = "Đang mở camera…"; $("cam-them").innerHTML = ""; CAM_CUOI = {}; }
   napCam(function () {
-    var F = window.Html5QrcodeSupportedFormats || {};
-    var dinhDang = ["EAN_13", "EAN_8", "UPC_A", "UPC_E", "CODE_128", "CODE_39", "ITF", "QR_CODE"].map(function (k) { return F[k]; }).filter(function (x) { return x !== undefined; });
-    try { CAM = new Html5Qrcode("cam-vung", {formatsToSupport: dinhDang, experimentalFeatures: {useBarCodeDetectorIfSupported: true}, verbose: false}); } catch (e) { $("cam-chu").textContent = "Máy này không hỗ trợ quét"; return; }
-    CAM_CHE = che;
-    CAM.start({facingMode: "environment"}, {fps: 15, disableFlip: true,
-        qrbox: function (w, h) { var r = Math.min(w * 0.92, 460); return {width: Math.round(r), height: Math.round(Math.min(h * 0.6, r * 0.6))}; },
-        videoConstraints: {facingMode: "environment", width: {ideal: 1920}, height: {ideal: 1080}, advanced: [{focusMode: "continuous"}]}},
-      function (txt) { quetDuoc(txt, che); }, function () {})
-      .then(function () { if (!giu) $("cam-chu").textContent = che === "mv" ? "Đưa mã vạch vào khung" : "Quét liên tục — đưa từng món vào khung"; })
-      .catch(function (e) { if (giu) return; var m = String((e && e.message) || e); $("cam-chu").textContent = /NotAllowed|Permission/i.test(m) ? "Chưa cho phép dùng camera — vào cài đặt trình duyệt cho phép camera, hoặc bấm Chụp ảnh mã" : /NotFound|device/i.test(m) ? "Máy này không có camera — bấm Chụp ảnh mã hoặc dùng máy quét" : "Không mở được camera (" + m + ") — thử bấm Chụp ảnh mã"; });
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("cam-chu").textContent = "Trình duyệt này không cho dùng camera — mở bằng Safari/Chrome (không mở trong Zalo), hoặc bấm Chụp ảnh mã"; return; }
+    navigator.mediaDevices.getUserMedia({audio: false, video: {facingMode: {ideal: "environment"}, width: {ideal: 1920}, height: {ideal: 1080}}}).then(function (st) {
+      if ($("cam-hop").hidden) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
+      dungCam_();
+      var v = document.createElement("video"); v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.muted = true; v.autoplay = true; v.srcObject = st;
+      var vg = $("cam-vung"); vg.innerHTML = ""; vg.appendChild(v); var kh = document.createElement("div"); kh.className = "cam-khung"; vg.appendChild(kh);
+      var tr = st.getVideoTracks()[0]; try { tr.applyConstraints({advanced: [{focusMode: "continuous"}]}).catch(function () {}); } catch (e) {}
+      var c = {st: st, v: v, chay: true}; CAM = c; v.play().catch(function () {});
+      var vong = function () {
+        if (!c.chay) return;
+        if (v.readyState < 2 || !v.videoWidth) { c.h = setTimeout(vong, 150); return; }
+        BD.detect(v).then(function (kq) { if (c.chay && kq && kq.length) quetDuoc(String(kq[0].rawValue), CAM_CHE); })
+          .catch(function () {}).then(function () { if (c.chay) c.h = setTimeout(vong, 120); });
+      };
+      vong();
+      if (!giu) $("cam-chu").textContent = che === "mv" ? "Đưa mã vạch vào khung xanh" : "Quét liên tục — đưa từng món vào khung xanh";
+    }).catch(function (e) {
+      if (giu) return; var m = String((e && (e.name + " " + e.message)) || e);
+      $("cam-chu").textContent = /NotAllowed|Permission|Security/i.test(m) ? "Chưa cho phép dùng camera — iPhone: Cài đặt › Safari › Camera › Cho phép, rồi mở lại app. Hoặc bấm Chụp ảnh mã"
+        : /NotFound|Overconstrained|device/i.test(m) ? "Không tìm thấy camera — bấm Chụp ảnh mã hoặc dùng máy quét"
+        : "Không mở được camera (" + m + ") — thử bấm Chụp ảnh mã";
+    });
   });
 }
+function dungCam_() { var c = CAM; CAM = null; if (c) { c.chay = false; clearTimeout(c.h); try { c.st.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} } }
 var CAM_CHE = "ban";
 function quetDuoc(txt, che) {
-  var bay = Date.now(); if (CAM_CUOI[txt] && bay - CAM_CUOI[txt] < 1500) return; CAM_CUOI[txt] = bay;
+  var bay = Date.now(), cu = CAM_CUOI[txt]; CAM_CUOI[txt] = bay; if (cu && bay - cu < 1200) return;   // mã còn trong khung thì chỉ tính 1 lần; rút ra rồi đưa lại mới tính tiếp
   if (navigator.vibrate) navigator.vibrate(60);
   $("cam-them").innerHTML = "";
   if (che === "mv") { dongCam(); var o = $("h-mv"); if (o) o.value = txt; bao("Đã quét: " + txt); return; }
@@ -716,17 +741,20 @@ function quetDuoc(txt, che) {
 }
 // chụp ảnh mã vạch: ảnh nét hơn khung hình video nên đọc chắc hơn
 function quetAnh(tep) {
-  if (!tep) return; $("cam-chu").textContent = "Đang đọc ảnh…";
+  if (!tep) return; $("cam-chu").textContent = "Đang đọc ảnh…"; dungCam_();
+  var moLai = function () { if (!$("cam-hop").hidden && CAM_CHE !== "mv") moCam(CAM_CHE, true); };
+  var hong = function () { $("cam-chu").textContent = "Chưa đọc được mã trong ảnh — chụp gần hơn, rõ nét, mã nằm ngang"; moLai(); };
   napCam(function () {
-    var chay = CAM; var tiep = function () {
-      var q; try { q = new Html5Qrcode("cam-tep", {verbose: false}); } catch (e) { $("cam-chu").textContent = "Máy này không đọc được ảnh"; return; }
-      q.scanFile(tep, false).then(function (txt) { q.clear(); quetDuoc(txt, CAM_CHE); if (!$("cam-hop").hidden && CAM_CHE !== "mv") moCam(CAM_CHE, true); })
-        .catch(function () { q.clear(); $("cam-chu").textContent = "Chưa đọc được mã trong ảnh — chụp gần hơn, rõ nét, mã nằm ngang"; if (!$("cam-hop").hidden) moCam(CAM_CHE, true); });
+    var url = URL.createObjectURL(tep), img = new Image();
+    img.onload = function () {
+      var k = Math.min(1, 2000 / Math.max(img.naturalWidth, img.naturalHeight)), cv = document.createElement("canvas");
+      cv.width = Math.round(img.naturalWidth * k); cv.height = Math.round(img.naturalHeight * k); cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(url);
+      BD.detect(cv).then(function (kq) { if (kq && kq.length) { CAM_CUOI = {}; quetDuoc(String(kq[0].rawValue), CAM_CHE); moLai(); } else hong(); }).catch(hong);
     };
-    if (chay && chay.isScanning) { CAM = null; chay.stop().then(function () { chay.clear(); tiep(); }).catch(tiep); } else tiep();
+    img.onerror = function () { URL.revokeObjectURL(url); hong(); }; img.src = url;
   });
 }
-function dongCam() { var c = CAM; CAM = null; $("cam-hop").hidden = true; if (c) { try { c.stop().then(function () { c.clear(); }).catch(function () {}); } catch (e) {} } $("cam-vung").innerHTML = ""; if (TRANG === "ban" && $("hop").hidden) ve(); }
+function dongCam() { dungCam_(); $("cam-hop").hidden = true; $("cam-vung").innerHTML = ""; if (TRANG === "ban" && $("hop").hidden) ve(); }
 
 // ===== TÌM NHANH (Ctrl+K) =====
 var TK_CHON = 0;
