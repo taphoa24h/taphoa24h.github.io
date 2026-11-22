@@ -1233,12 +1233,16 @@ function docSo(n) {   // 35000 -> "ba mươi lăm nghìn"
   return out.join(" ");
 }
 function cheDoc() { return lsDoc("th_doc", "gia"); }   // tat | gia | ten
-var GIONG = null;
-function chonGiong() { try { var v = speechSynthesis.getVoices(); GIONG = v.find(function (x) { return /^vi/i.test(x.lang); }) || null; } catch (e) {} }
+var GIONG = null, GIONG_KHOP = false;
+function gioiGiong() { return lsDoc("th_giong", "nu"); }   // nu | nam
+function loaiGiong(v) { var t = String(v.name || "").replace(/vietnam(ese)?|tiếng việt/gi, " "); if (/female|nữ|linh|hoai ?my|hoài ?my|thu ?trang|ngoc|mai|lan\b|google/i.test(t)) return "nu"; if (/\bmale\b|\bnam\b|nam ?minh|\ban\b|minh|quang|duc|đức/i.test(t)) return "nam"; return ""; }
+function giongVi() { try { return speechSynthesis.getVoices().filter(function (x) { return /^vi/i.test(x.lang); }); } catch (e) { return []; } }
+function chonGiong() { var ds = giongVi(), g = gioiGiong(), k = ds.find(function (x) { return loaiGiong(x) === g; }); GIONG_KHOP = !!k; GIONG = k || ds[0] || null; }
 try { if (window.speechSynthesis) { chonGiong(); speechSynthesis.onvoiceschanged = chonGiong; } } catch (e) {}
+function tenGiong() { chonGiong(); if (!window.speechSynthesis) return "Máy này không hỗ trợ giọng đọc"; if (!GIONG) return "Chưa có giọng tiếng Việt trên máy — dùng giọng mặc định"; return "Đang dùng: " + String(GIONG.name).replace(/\s*[-–(].*$/, "") + (GIONG_KHOP ? "" : " (chỉnh cao độ)"); }
 function noi(t, ep) {
   if ((!ep && cheDoc() === "tat") || !window.speechSynthesis) return;
-  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "vi-VN"; if (GIONG) u.voice = GIONG; u.rate = 1.08; speechSynthesis.speak(u); } catch (e) {}
+  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "vi-VN"; chonGiong(); if (GIONG) u.voice = GIONG; u.rate = 1.08; u.pitch = GIONG_KHOP ? 1 : (gioiGiong() === "nam" ? 0.7 : 1.25); speechSynthesis.speak(u); } catch (e) {}
 }
 var GIA_H = null;
 function baoGia(ten, gia, q, dv) {
@@ -1279,7 +1283,6 @@ function guiNhanh(cach) {
   bao("Đang lưu " + dd(phai) + "…"); var s = $("tim"); if (s && window.innerWidth >= 768) s.focus();
   goi("thanhToan", {dong: don.d, giam: 0, cach: cach, dua: 0, khach: "", sdt: "", km: kmN}).then(function (o) {
     var a = document.activeElement; S = o; if (!a || a.tagName !== "INPUT" || a.id === "tim") ve();
-    if (cheDoc() !== "tat") noi("Đã thu " + docSo(phai) + " đồng");
     var tbT = "✓ Đã thu " + dd(phai) + (cach === "ck" ? " (chuyển khoản)" : "") + " · " + o.vua;
     if (lsDoc("th_in", false)) { inHD(o.vua); bao(tbT); } else thanhNut(tbT, "🖨 In", function () { inHD(o.vua); });
   }).catch(function (e) {
@@ -1729,7 +1732,7 @@ function formXuat() {
 function veCD() {
   var c = S.cd;
   return '<div class="tieu-de"><h2>Cài đặt</h2></div><div class="luoi2"><div class="the"><h2>Thông tin tiệm <small>in trên hoá đơn</small></h2><label class="f">Tên tiệm<input id="c-ten" value="' + esc(c.tenTiem) + '"></label><label class="f">Địa chỉ<input id="c-dc" value="' + esc(c.diaChi) + '"></label><label class="f">Số điện thoại<input id="c-sdt" value="' + esc(c.sdt) + '"></label><label class="f">Lời cảm ơn cuối hoá đơn<input id="c-loi" value="' + esc(c.loiCam) + '"></label>' +
-    '<div class="in-cd"><b>🔊 Giọng đọc khi quét mã</b> <small class="mo">(cài riêng cho máy này)</small><div class="hai" style="margin-top:8px"><label class="f">Đọc gì<select id="c-doc"><option value="gia"' + (cheDoc() === "gia" ? " selected" : "") + '>Đọc giá (VD: "năm nghìn")</option><option value="ten"' + (cheDoc() === "ten" ? " selected" : "") + '>Đọc tên hàng + giá</option><option value="tat"' + (cheDoc() === "tat" ? " selected" : "") + '>Tắt giọng đọc</option></select></label><span style="align-self:end;padding-bottom:10px"><button class="btn nho" type="button" data-doc-thu="1">▶ Nghe thử</button></span></div><small class="mo">Khi quét: hiện giá thật to giữa màn hình và đọc giá. Khi thu tiền: đọc "Đã thu … đồng".</small></div>' +
+    '<div class="in-cd"><b>🔊 Giọng đọc khi quét mã</b> <small class="mo">(cài riêng cho máy này)</small><div class="hai" style="margin-top:8px"><label class="f">Đọc gì<select id="c-doc"><option value="gia"' + (cheDoc() === "gia" ? " selected" : "") + '>Đọc giá (VD: "năm nghìn")</option><option value="ten"' + (cheDoc() === "ten" ? " selected" : "") + '>Đọc tên hàng + giá</option><option value="tat"' + (cheDoc() === "tat" ? " selected" : "") + '>Tắt giọng đọc</option></select></label><span style="align-self:end;padding-bottom:10px"><button class="btn nho" type="button" data-doc-thu="1">▶ Nghe thử</button></span></div><div class="hai"><label class="f">Giọng đọc<select id="c-giong"><option value="nu"' + (gioiGiong() === "nu" ? " selected" : "") + '>👩 Giọng nữ</option><option value="nam"' + (gioiGiong() === "nam" ? " selected" : "") + '>👨 Giọng nam</option></select></label><small class="mo" id="giong-ten" style="align-self:end;padding-bottom:12px">' + tenGiong() + '</small></div><small class="mo">Khi quét mã: hiện giá thật to giữa màn hình và đọc số tiền.</small></div>' +
     '<div class="in-cd"><b>🖨 In hoá đơn</b> <small class="mo">(cài riêng cho máy này)</small><div class="hai" style="margin-top:8px"><label class="f">Khổ giấy máy in<select id="c-kho"><option value="58"' + (lsDoc("th_kho", "58") === "58" ? " selected" : "") + '>58mm (máy in nhỏ)</option><option value="80"' + (lsDoc("th_kho", "58") === "80" ? " selected" : "") + '>80mm (máy in lớn)</option></select></label><label class="ck" style="align-self:center;margin:14px 0 0"><input type="checkbox" id="c-tuin"' + (lsDoc("th_in", false) ? " checked" : "") + '> Tự in sau mỗi lần thu tiền</label></div><button class="btn nho" type="button" data-in-thu="1">In thử hoá đơn gần nhất</button></div>' +
     '<h2 style="margin-top:18px">Nhận chuyển khoản (mã QR)</h2><div class="hai"><label class="f">Ngân hàng<input id="c-nh" value="' + esc(c.nh) + '" placeholder="VCB, MB, TCB, ICB, BIDV…"></label><label class="f">Số tài khoản<input id="c-stk" value="' + esc(c.stk) + '"></label></div><label class="f">Tên chủ tài khoản<input id="c-tentk" value="' + esc(c.tenTK) + '" placeholder="NGUYEN VAN A"></label>' +
     '<h2 style="margin-top:18px">Tích điểm khách quen <small>bỏ trống = tắt</small></h2><div class="hai"><label class="f">Mua bao nhiêu đồng được 1 điểm<input id="c-diem" type="number" inputmode="numeric" min="0" value="' + (c.diem || "") + '" placeholder="VD: 10000"></label><label class="f">1 điểm đổi được (đồng)<input id="c-giadiem" type="number" inputmode="numeric" min="0" value="' + (c.giaDiem || "") + '" placeholder="VD: 100"></label></div><p class="mo nho" style="margin-top:-4px">Khách có số điện thoại mới được tích điểm. Ví dụ 10.000đ = 1 điểm, 1 điểm = 100đ: mua 100.000đ được 10 điểm = giảm 1.000đ lần sau.</p>' +
@@ -1905,6 +1908,7 @@ document.addEventListener("input", function (e) {
   if (t.id === "kiem-tim" || t.id === "tem-tim") { var q = boDau(t.value), at = t.id === "kiem-tim" ? "data-kiem-dong" : "data-tem-dong"; document.querySelectorAll("[" + at + "]").forEach(function (r) { r.style.display = r.getAttribute(at).indexOf(q) >= 0 ? "" : "none"; }); return; }
 });
 document.addEventListener("change", function (e) {
+  if (e.target && e.target.id === "c-giong") { lsGhi("th_giong", e.target.value); var gt = $("giong-ten"); if (gt) gt.textContent = tenGiong(); noi("năm nghìn", true); return; }
   if (e.target && e.target.id === "c-doc") { lsGhi("th_doc", e.target.value); if (e.target.value !== "tat") noi(e.target.value === "ten" ? "Mì Hảo Hảo, năm nghìn" : "năm nghìn", true); return; }
   if (e.target && e.target.id === "c-kho") { lsGhi("th_kho", e.target.value); bao("Khổ giấy hoá đơn: " + e.target.value + "mm"); return; }
   if (e.target && e.target.id === "c-tuin") { lsGhi("th_in", e.target.checked); bao(e.target.checked ? "Sẽ tự in sau mỗi lần thu tiền" : "Đã tắt tự in"); return; }
