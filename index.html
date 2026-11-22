@@ -701,7 +701,11 @@ function quetDuoc(txt, che) {
   if (navigator.vibrate) navigator.vibrate(60);
   $("cam-them").innerHTML = "";
   if (che === "mv") { dongCam(); var o = $("h-mv"); if (o) o.value = txt; bao("Đã quét: " + txt); return; }
-  if (che === "nhap") { nhapThem(txt); $("cam-chu").textContent = "Đã thêm: " + txt + " · quét tiếp hoặc Đóng"; return; }
+  if (che === "nhap") {
+    var co = S.hang.some(function (x) { return x.mv === txt || x.mvl === txt || x.ma === txt; });
+    if (!co) { dongCam(); nhapThem(txt); return; }   // mã mới: đóng camera để hiện form thêm hàng
+    nhapThem(txt); $("cam-chu").textContent = "Đã thêm: " + txt + " · quét tiếp hoặc Đóng"; return;
+  }
   var h = S.hang.find(function (x) { return !x.ngung && (x.mv === txt || x.mvl === txt || x.ma === txt); });
   if (!h) {
     $("cam-chu").textContent = "Đã đọc mã " + txt + " nhưng chưa món nào gắn mã này";
