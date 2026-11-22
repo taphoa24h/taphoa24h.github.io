@@ -544,6 +544,25 @@ body.dang-dn{background:#04110b}
  #dn .dn-phim{grid-template-columns:repeat(3,62px);gap:10px 22px}#dn .dn-phim button{width:62px;height:62px;font-size:23px}
  #dn .dn-nho{margin-top:12px}#dn .dn-baomat{margin-top:10px}
 }
+
+/* máy tính (chuột + bàn phím): PIN kiểu ô nhập, không dùng bàn phím tròn */
+#dn .dn-pc,#dn .chi-pc{display:none}
+@media(min-width:768px) and (hover:hover) and (pointer:fine){
+ #dn .chi-dt{display:none}#dn .chi-pc{display:inline}
+ #dn .dn-phim{display:none!important}
+ #dn .dn-pc{display:block;margin-top:6px}
+ #dn .dn-pc .btn.lon{width:100%}
+ #dn .dn-xoa{display:block;margin:10px auto 0;background:none;border:0;color:#86a698;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+ #dn .dn-xoa:hover{color:#d1fae5}
+ #dn .dn-cham{gap:10px;margin:18px 0 6px}
+ #dn .dn-cham i{width:54px;height:60px;border-radius:14px;border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);display:grid;place-items:center;transform:none!important;box-shadow:none}
+ #dn .dn-cham i.d{background:rgba(52,211,153,.12);border-color:#34d399;box-shadow:none}
+ #dn .dn-cham i.d::after{display:block;content:"";width:12px;height:12px;border-radius:50%;background:#fff}
+ #dn .dn-cham i.ht{border-color:#fff;box-shadow:0 0 0 4px rgba(52,211,153,.22);animation:dnNhay 1.1s steps(1) infinite}
+ #dn .dn-cham.sai i{background:rgba(248,113,113,.12);border-color:#f87171;box-shadow:none}
+ #dn .dn-nho{margin-top:16px}
+}
+@keyframes dnNhay{50%{border-color:rgba(255,255,255,.35)}}
 </style>
 </head>
 <body>
@@ -768,12 +787,13 @@ function moDN() {
 function veDN(loi) {
   var o = DS_NGUOI, c = DN_CHON;
   var buoc = '<div class="dn-buoc"><i class="d"></i><i class="' + (c ? "d" : "") + '"></i><span>Bước ' + (c ? 2 : 1) + "/2</span></div>";
-  khungDN(o.tenTiem, buoc + "<h2>" + (c ? "Nhập mã PIN" : "Ai đang bán hàng?") + '</h2><div class="phu">' + (c ? "4–6 chữ số · bấm ✓ để vào" : "Chọn tài khoản của bạn để tiếp tục") + "</div>" +
+  khungDN(o.tenTiem, buoc + "<h2>" + (c ? "Nhập mã PIN" : "Ai đang bán hàng?") + '</h2><div class="phu">' + (c ? '<span class="chi-dt">4–6 chữ số · bấm ✓ để vào</span><span class="chi-pc">Gõ mã PIN bằng bàn phím · Enter để vào</span>' : "Chọn tài khoản của bạn để tiếp tục") + "</div>" +
     (!c ? '<div class="dn-ds">' + o.nv.map(function (n) { return '<button data-dn-nguoi="' + esc(n.ma) + '"><span class="thumb" style="' + nenHang({nhom: n.ten}) + '">' + esc(chuTat(n.ten)) + '</span><span class="nd"><b>' + esc(n.ten) + "</b><small>" + (n.vai === "chu" ? "Chủ tiệm · toàn quyền" : "Nhân viên bán hàng") + '</small></span><span class="mui">›</span></button>'; }).join("") + "</div>"
       : '<div class="dn-chon"><span class="thumb" style="' + nenHang({nhom: c.ten}) + '">' + esc(chuTat(c.ten)) + '</span><span class="nd"><b>' + esc(c.ten) + "</b><small>" + (c.vai === "chu" ? "Chủ tiệm" : "Nhân viên") + "</small></span>" + (o.nv.length > 1 ? '<button class="btn nho" data-dn-doi="1">Đổi tài khoản</button>' : "") + "</div>" +
         '<div class="dn-nhan-pin">Mã PIN</div><div class="dn-cham" id="dn-cham"></div><div class="dn-loi" id="dn-loi">' + esc(loi || "") + '</div><div class="dn-phim">' +
         [1, 2, 3, 4, 5, 6, 7, 8, 9, "⌫", 0, "ok"].map(function (x) { return '<button data-pin="' + x + '"' + (x === "ok" ? ' class="ok-p" title="Đăng nhập" aria-label="Đăng nhập"' : x === "⌫" ? ' class="phu-p" title="Xoá 1 số" aria-label="Xoá 1 số"' : "") + ">" + (x === "ok" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>' : x === "⌫" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M18 9l-6 6M12 9l6 6"/></svg>' : x) + "</button>"; }).join("") +
-        '</div><label class="dn-nho"><span>Ghi nhớ đăng nhập trên máy này</span><span class="gat"><input type="checkbox" id="dn-nho"' + (DN_NHO ? " checked" : "") + "><span></span></span></label>"));
+        '</div><label class="dn-nho"><span>Ghi nhớ đăng nhập trên máy này</span><span class="gat"><input type="checkbox" id="dn-nho"' + (DN_NHO ? " checked" : "") + "><span></span></span></label>" +
+        '<div class="dn-pc"><button class="btn lon" data-pin="ok">Đăng nhập</button><button class="dn-xoa" data-pin="C">Xoá mã đã gõ</button></div>'));
   PIN_GO = ""; chamPin(); var dn0 = $("dn"); if (dn0) dn0.classList.toggle("pin", !!c);
 }
 function chamPin() { var o = $("dn-cham"); if (!o) return; var n = Math.max(4, Math.min(6, PIN_GO.length + (PIN_GO.length >= 4 && PIN_GO.length < 6 ? 1 : 0))); o.classList.remove("sai"); o.innerHTML = Array.from({length: n}, function (_, i) { return '<i class="' + (i < PIN_GO.length ? "d" : i === PIN_GO.length ? "ht" : "") + '"></i>'; }).join(""); }
