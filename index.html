@@ -591,6 +591,67 @@ nav button .dem.cam{background:#f59e0b}
 .dsb .sl .so{cursor:pointer}
 
 .in-cd{border:1px dashed var(--vien);border-radius:12px;padding:12px;margin:4px 0 12px;background:var(--nen)}.in-cd .btn.nho{margin-top:4px}
+
+/* ===== GIAO DIỆN v3 — hiện đại ===== */
+:root{--nen:#f1f5f3;--vien:#e3eae6;--vien2:#eef3f0;--r:18px;--bong:0 1px 2px rgba(12,32,22,.04),0 10px 28px -12px rgba(12,32,22,.12)}
+body:not(.dang-dn){background:radial-gradient(1100px 460px at 88% -140px,rgba(16,185,129,.12),transparent 62%),radial-gradient(900px 420px at 18% -180px,rgba(13,148,136,.09),transparent 60%),var(--nen);background-attachment:fixed}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#cfdcd5;border-radius:99px;border:3px solid transparent;background-clip:content-box}::-webkit-scrollbar-thumb:hover{background-color:#a9c2b5}
+header{background:rgba(255,255,255,.7)!important;backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border-bottom:1px solid rgba(220,230,225,.8)!important}
+header h1{font-size:17px;letter-spacing:-.3px}header h1 small{font-weight:500}
+@media(min-width:768px){
+ nav{background:radial-gradient(420px 260px at 0 0,rgba(16,185,129,.16),transparent 70%),linear-gradient(180deg,#0b2018 0%,#06120d 100%)!important;box-shadow:inset -1px 0 0 rgba(255,255,255,.04)}
+ nav .nhom-nav{color:#4d7262!important;letter-spacing:1px}
+ nav button{border-radius:12px!important;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+ nav button:hover{background:rgba(255,255,255,.05)!important;color:#fff!important}
+ nav button.on{background:linear-gradient(90deg,rgba(16,185,129,.24),rgba(16,185,129,.05))!important;border-color:rgba(52,211,153,.2);color:#fff!important;box-shadow:0 6px 18px -8px rgba(16,185,129,.5)}
+ nav button.on::before{background:linear-gradient(180deg,#6ee7b7,#10b981)!important;box-shadow:0 0 12px rgba(52,211,153,.7)}
+ nav .thuong-hieu .logo{box-shadow:0 0 0 1px rgba(255,255,255,.1),0 8px 24px rgba(16,185,129,.45)}
+ nav .nguoi-dung{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px}
+}
+@media(max-width:767px){nav{background:rgba(255,255,255,.88)!important;backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%)}}
+/* thẻ */
+.the{border:1px solid var(--vien);border-radius:var(--r);box-shadow:var(--bong)}
+.the h2{font-size:15.5px;font-weight:700;letter-spacing:-.25px}
+.tieu-de h2{font-size:24px;letter-spacing:-.7px}
+.tq-dau h2{font-size:27px;letter-spacing:-.9px;background:linear-gradient(90deg,#0b2018,#0f5a3f);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* thẻ số liệu */
+.kpi4 .o{border-radius:var(--r)!important;border:1px solid var(--vien)!important;box-shadow:var(--bong);transition:transform .15s,box-shadow .15s,border-color .15s}
+.kpi4 .o::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#10b981,#34d399)}
+.kpi4 .o:nth-child(2)::before{background:linear-gradient(90deg,#7c3aed,#a78bfa)}.kpi4 .o:nth-child(3)::before{background:linear-gradient(90deg,#2563eb,#60a5fa)}.kpi4 .o:nth-child(4)::before{background:linear-gradient(90deg,#d97706,#fbbf24)}
+.kpi4 .o:hover{transform:translateY(-2px);box-shadow:0 18px 36px -16px rgba(12,32,22,.22);border-color:#cfe3d9!important}
+.kpi4 b{font-size:28px;letter-spacing:-1px}
+.kpi4 .ic{border-radius:10px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
+/* nút */
+.btn{border-radius:12px;border-width:1px;transition:background .15s,border-color .15s,transform .08s,box-shadow .15s,filter .15s}
+.btn:not(.chinh):not(.do):not(.toi):not(:disabled):hover{border-color:#b9d9ca;background:#f7fbf9}
+.btn.chinh{background:linear-gradient(135deg,#10b981 0%,#059669 55%,#047857 100%);border-color:transparent;box-shadow:0 10px 22px -10px rgba(5,150,105,.75),inset 0 1px 0 rgba(255,255,255,.18)}
+.btn.chinh:not(:disabled):hover{filter:brightness(1.06);transform:translateY(-1px)}
+.btn:active{transform:scale(.98)}
+.btn.toi{background:linear-gradient(135deg,#123526,#0b2018);border-color:transparent;color:#fff}
+/* chip & tab */
+.chip{border-radius:99px;border-width:1px;transition:background .15s,border-color .15s,color .15s}
+.chip:hover{border-color:#b9d9ca}
+.chip.on{background:linear-gradient(135deg,#0f5a3f,#0b2018)!important;border-color:transparent!important;color:#fff!important;box-shadow:0 6px 16px -8px rgba(11,32,24,.6)}
+/* bảng */
+.bang th{background:transparent!important;color:#7d8f86;font-weight:600;border-bottom:1px solid var(--vien)}
+.bang td{border-bottom:1px solid var(--vien2)}
+.bang tbody tr{transition:background .12s}.bang tbody tr:hover{background:#f4faf7}
+.bang tr.bam{cursor:pointer}
+/* ô nhập */
+input,select,textarea{border-radius:12px;border-width:1px}
+input:focus,select:focus,textarea:focus{border-color:#10b981!important;box-shadow:0 0 0 4px rgba(16,185,129,.14)!important}
+.timbox input{border-radius:14px;background:rgba(255,255,255,.9)}
+/* hộp thoại */
+#hop .nen{background:rgba(6,18,13,.45)!important;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#hop .the-hop{border-radius:24px;box-shadow:0 30px 80px -20px rgba(6,18,13,.45);border:1px solid rgba(255,255,255,.6)}
+#hop .the-hop h3{font-size:18px;letter-spacing:-.4px}
+/* bán hàng */
+.sp{border-radius:16px!important;transition:transform .15s,box-shadow .15s}
+.sp:hover{transform:translateY(-2px);box-shadow:0 16px 30px -16px rgba(12,32,22,.35)}
+.sp .anh::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 40%,rgba(0,0,0,.10));pointer-events:none}
+.gio-khung{border-radius:20px!important;border:1px solid var(--vien);box-shadow:var(--bong)}
+.thumb{border-radius:12px}
+.tag{border-radius:99px;font-weight:700}
 </style>
 </head>
 <body>
