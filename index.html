@@ -424,7 +424,7 @@ var LOGO = '<svg viewBox="0 0 1024 1024" aria-hidden="true"><defs><linearGradien
 var API = "https://script.google.com/macros/s/AKfycbw5nHiUrwhhBuULAuMTa_ptE2-TqLvrnI9r58dgtu-YXbZFhcFLcXy0ZsGbmuY5Ps1f/exec", CO_CAM = true;
 var CH = (function () {
   var q = ""; try { q = new URLSearchParams(location.search).get("k") || ""; } catch (e) {}
-  try { if (q) { localStorage.setItem("th_k", q); history.replaceState(null, "", location.pathname); } var k = q || localStorage.getItem("th_k") || ""; return {k: k, dung: !!k}; } catch (e) { return {k: q, dung: !!q}; }
+  try { if (q) { localStorage.setItem("th_k", q); history.replaceState(null, "", location.pathname); } var k = q || localStorage.getItem("th_k") || "b5448f5f568a43a9"; return {k: k, dung: !!k}; } catch (e) { return {k: q || "b5448f5f568a43a9", dung: true}; }
 })();
 </script>
 <script>
