@@ -1850,7 +1850,13 @@ if (THAT && !CH.dung) {
   $("trang").innerHTML = '<div class="the" style="max-width:420px;margin:60px auto;text-align:center"><h2 style="justify-content:center">Cần link của tiệm</h2><p class="mo">Mở app <b>một lần</b> bằng link chủ tiệm gửi (có đoạn <b>?k=…</b> ở cuối). Máy sẽ tự nhớ, lần sau mở từ biểu tượng trên màn hình là vào.</p><p class="mo nho" style="margin-top:14px">Hoặc dán link / gõ <b>mã tiệm</b> vào đây:</p><input id="nhapk" placeholder="Mã tiệm hoặc link có ?k=" autocomplete="off" style="width:100%;margin:6px 0 10px"><button class="btn chinh lon" onclick="var v=String(nhapk.value).trim(),m=v.split(&quot;k=&quot;);v=m.length>1?decodeURIComponent(m[1].split(&quot;&amp;&quot;)[0]):v;if(v){try{localStorage.setItem(&quot;th_k&quot;,v)}catch(e){}location.reload()}">Vào tiệm</button></div>';
 } else {
   // có đăng nhập đã nhớ -> vào thẳng; chưa có -> màn hình đăng nhập (hoặc tạo tài khoản chủ nếu tiệm chưa có ai)
-  if (DN.pin) goi("tai").then(function (o) { nhan(o); napAnh(); setTimeout(function () { var s = $("tim"); if (s && window.innerWidth >= 768) s.focus(); }, 60); }).catch(function (e) { if (String((e && e.message) || e).indexOf("CAN_PIN") >= 0) { dangXuat(); return; } var sn = laLoiMang(e) && lsDoc("th_snap", null); if (sn) { nhan(phuCho(sn)); napAnh(); bao("📴 Mất mạng — đang dùng dữ liệu đã lưu trên máy"); return; } $("trang").innerHTML = '<div class="the trong">Không tải được dữ liệu: ' + esc((e && e.message) || e) + "</div>"; });
+  // mở tức thì: có dữ liệu đã lưu của đúng người này thì hiện ngay, tải mới ngầm phía sau
+  var snN = DN.pin && lsDoc("th_snap", null);
+  if (snN && snN.u && (snN.u.ma === DN.ma || !snN.u.ma) && snN.hang) {
+    nhan(phuCho(snN)); napAnh(); trangThai("dang");
+    goi("tai").then(function (o) { var a = document.activeElement; S = o; if ((!a || a.tagName !== "INPUT") && $("hop").hidden) ve(); })
+      .catch(function (e) { if (String((e && e.message) || e).indexOf("CAN_PIN") >= 0) { dangXuat(); return; } if (laLoiMang(e)) bao("📴 Mất mạng — đang dùng dữ liệu đã lưu trên máy"); });
+  } else if (DN.pin) goi("tai").then(function (o) { nhan(o); napAnh(); setTimeout(function () { var s = $("tim"); if (s && window.innerWidth >= 768) s.focus(); }, 60); }).catch(function (e) { if (String((e && e.message) || e).indexOf("CAN_PIN") >= 0) { dangXuat(); return; } var sn = laLoiMang(e) && lsDoc("th_snap", null); if (sn) { nhan(phuCho(sn)); napAnh(); bao("📴 Mất mạng — đang dùng dữ liệu đã lưu trên máy"); return; } $("trang").innerHTML = '<div class="the trong">Không tải được dữ liệu: ' + esc((e && e.message) || e) + "</div>"; });
   else moDN();
   setTimeout(function () { veMang(); guiCho(); }, 2500);
 }
