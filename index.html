@@ -770,9 +770,11 @@ function moCam(che, giu) {
   if (!giu) { $("cam-chu").textContent = "Đang mở camera…"; $("cam-them").innerHTML = ""; CAM_CUOI = {}; }
   napCam(function () {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("cam-chu").textContent = "Trình duyệt này không cho dùng camera — mở bằng Safari/Chrome (không mở trong Zalo), hoặc bấm Chụp ảnh mã"; return; }
-    navigator.mediaDevices.getUserMedia({audio: false, video: {facingMode: {ideal: "environment"}, width: {ideal: 1920}, height: {ideal: 1080}}}).then(function (st) {
+    var songCu = CAM_GIU && CAM_GIU.getVideoTracks().some(function (t) { return t.readyState === "live"; }) ? CAM_GIU : null;
+    clearTimeout(CAM_GIU_H); CAM_GIU = null;
+    (songCu ? Promise.resolve(songCu) : navigator.mediaDevices.getUserMedia({audio: false, video: {facingMode: {ideal: "environment"}, width: {ideal: 1920}, height: {ideal: 1080}}})).then(function (st) {
       if ($("cam-hop").hidden) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
-      dungCam_();
+      if (CAM && CAM.st !== st) dungCam_(true); else if (CAM) { CAM.chay = false; clearTimeout(CAM.h); CAM = null; }
       var v = document.createElement("video"); v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.muted = true; v.autoplay = true; v.srcObject = st;
       var vg = $("cam-vung"); vg.innerHTML = ""; vg.appendChild(v); var kh = document.createElement("div"); kh.className = "cam-khung"; vg.appendChild(kh);
       var tr = st.getVideoTracks()[0]; try { tr.applyConstraints({advanced: [{focusMode: "continuous"}]}).catch(function () {}); } catch (e) {}
@@ -793,7 +795,11 @@ function moCam(che, giu) {
     });
   });
 }
-function dungCam_() { var c = CAM; CAM = null; if (c) { c.chay = false; clearTimeout(c.h); try { c.st.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} } }
+// giữ camera 2 phút sau khi đóng: mở lại trong lúc đó không phải xin quyền (iPhone hỏi lại mỗi lần xin)
+var CAM_GIU = null, CAM_GIU_H = null;
+function tatCamHan_() { clearTimeout(CAM_GIU_H); if (CAM_GIU) { try { CAM_GIU.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} } CAM_GIU = null; }
+function dungCam_(han) { var c = CAM; CAM = null; if (c) { c.chay = false; clearTimeout(c.h); try { c.v.pause(); c.v.srcObject = null; } catch (e) {} if (han) { try { c.st.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} } else { tatCamHan_(); CAM_GIU = c.st; CAM_GIU_H = setTimeout(tatCamHan_, 120000); } } }
+document.addEventListener("visibilitychange", function () { if (document.hidden) { if (CAM) dongCam(); tatCamHan_(); } });
 var CAM_CHE = "ban";
 function quetDuoc(txt, che) {
   var bay = Date.now(), cu = CAM_CUOI[txt]; CAM_CUOI[txt] = bay; if (cu && bay - cu < 1200) return;   // mã còn trong khung thì chỉ tính 1 lần; rút ra rồi đưa lại mới tính tiếp
