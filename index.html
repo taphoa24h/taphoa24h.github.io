@@ -703,6 +703,7 @@ body.man-khach{background:#04110b!important;color:#e8f5ee;margin:0}body.man-khac
 .ky-tai{background:#fff8e6;border:1px solid #f5d48a;color:#7a5200;border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:13.5px;display:flex;gap:10px;align-items:center}
 .ky-tai.loi{background:#fdecec;border-color:#f3b4b4;color:#9b1c1c}
 .ton.lay-het{color:var(--do)!important;font-weight:700}
+.kd-the{margin:12px 0;padding:14px;border:1.5px solid #a7e3c9;background:#f6fdf9}
 </style>
 </head>
 <body>
@@ -1134,6 +1135,7 @@ function quetDuoc(txt, che) {
   var bay = Date.now(), cu = CAM_CUOI[txt]; CAM_CUOI[txt] = bay; if (cu && bay - cu < 1200) return;   // mã còn trong khung thì chỉ tính 1 lần; rút ra rồi đưa lại mới tính tiếp
   if (navigator.vibrate) navigator.vibrate(60);
   $("cam-them").innerHTML = "";
+  if (che === "kd") { dongCam(); kdQuet(txt); return; }
   if (che === "mv") { dongCam(); var o = $("h-mv"); if (o) o.value = txt; bao("Đã quét: " + txt); return; }
   if (che === "nhap") {
     var co = S.hang.some(function (x) { return x.mv === txt || x.mvl === txt || x.ma === txt; });
@@ -1234,7 +1236,7 @@ function veBan() {
       return '<button class="sp' + (h.ton <= 0 ? " het" : "") + '" data-them="' + esc(h.ma) + '">' + (dem[h.ma] ? '<span class="bot-gio" data-bot="' + esc(h.ma) + '" title="Bấm nhầm? Bớt 1" role="button" aria-label="Bớt 1 ' + esc(h.ten) + '">−</span><span class="sl-gio">' + soVN(dem[h.ma]) + "</span>" : "") +
         '<span class="anh" style="' + (ANH[h.ma] ? "background:#f3f6f4" : nenHang(h)) + '">' + (ANH[h.ma] ? '<img src="' + ANH[h.ma] + '" alt="">' : esc(chuTat(h.ten))) + (h.ton <= 0 ? '<span class="het-phu"><span>Hết hàng</span></span>' : "") + (top ? '<span class="bc-tag">🔥<i> Bán chạy</i></span>' : "") + "</span>" +
         '<span class="tt"><span class="ten">' + esc(h.ten) + '</span><span class="duoi"><span class="gia">' + so(h.gb) + 'đ</span><span class="ton' + (it ? " it" : "") + (h.ton > 0 && con <= 0 ? " lay-het" : "") + '">' + (h.ton > 0 ? (con > 0 ? "còn " + soVN(con) : "Đã lấy hết") : "") + "</span></span></span></button>"; }).join("") + "</div>"
-      : '<div class="the trong">Không thấy hàng nào' + (TIM ? ' khớp "' + esc(TIM) + '"' + (laChu() ? '<br><br><button class="btn" data-hang-moi="' + esc(TIM) + '">' + IC.cong + "Thêm mặt hàng mới</button>" : "") : "") + "</div>");
+      : !S.hang.length && laChu() && !TIM ? '<div class="the trong" style="padding:28px 18px"><b style="font-size:16px">Chưa có mặt hàng nào</b><br><span class="nho">Bắt đầu bằng cách quét từng món trên kệ: app tự tìm tên, anh chỉ gõ giá và số lượng.</span><br><br><button class="btn chinh lon" data-kkd="1">📋 Quét kiểm kho đầu tiên</button></div>' : '<div class="the trong">Không thấy hàng nào' + (TIM ? ' khớp "' + esc(TIM) + '"' + (laChu() ? '<br><br><button class="btn" data-hang-moi="' + esc(TIM) + '">' + IC.cong + "Thêm mặt hàng mới</button>" : "") : "") + "</div>");
   var tabs = DON.map(function (x, i) { var n = x.d.length; return '<button class="' + (i === CUR ? "on" : "") + '" data-don="' + i + '">Đơn ' + (i + 1) + (n ? " · " + n : "") + "</button>"; }).join("") + '<button data-don-moi="1" title="Thêm đơn chờ">＋ Đơn chờ</button>';
   var phai = '<div class="gio-khung"><div class="gio-dau"><h3>Đơn hàng</h3>' + (d.length ? '<span class="tag c-xanh">' + soVN(slTong) + " sản phẩm</span>" : "") + '</div><div class="don-tabs">' + tabs + '</div><div class="gio-ds">' +
     (d.length ? d.map(function (x, i) { var h = hang(x.ma);
@@ -1751,7 +1753,7 @@ function veHang() {
   var cham = {}, bc = banCuoi(); hangCham().forEach(function (x) { cham[x.h.ma] = 1; });
   var t = boDau(KHO_TIM.trim()), loc = ds.filter(function (h) { return (KHO_LOC === "tat" ? !h.ngung : KHO_LOC === "sap" ? !h.ngung && h.ton > 0 && h.min > 0 && h.ton <= h.min : KHO_LOC === "het" ? !h.ngung && h.ton <= 0 : KHO_LOC === "hsd" ? !!coHsd[h.ma] : KHO_LOC === "cham" ? !!cham[h.ma] : h.ngung) && (!t || boDau(h.ten + " " + h.ma + " " + h.mv + " " + h.nhom).indexOf(t) >= 0); });
   var chu = laChu();
-  return tabHang() + '<div class="tieu-de"><h2>Hàng hoá</h2>' + (chu ? '<div class="phai"><button class="btn chinh" data-hang-moi="">' + IC.cong + 'Thêm hàng</button><button class="btn toi" data-nhap="1">' + IC.xe + 'Nhập hàng</button><button class="btn" data-kiem="1">' + IC.kiem + 'Kiểm kho</button><button class="btn" data-tem="1">' + IC.ma + "In tem</button></div>" : "") + "</div>" +
+  return tabHang() + '<div class="tieu-de"><h2>Hàng hoá</h2>' + (chu ? '<div class="phai"><button class="btn chinh" data-hang-moi="">' + IC.cong + 'Thêm hàng</button><button class="btn toi" data-nhap="1">' + IC.xe + 'Nhập hàng</button><button class="btn" data-kkd="1">' + IC.ma + 'Quét kiểm kho</button><button class="btn" data-kiem="1">' + IC.kiem + 'Kiểm kho</button><button class="btn" data-tem="1">' + IC.ma + "In tem</button></div>" : "") + "</div>" +
     '<div class="kpi">' + kpi("hang", "xanh", "Mặt hàng đang bán", dang.length) + (chu ? kpi("tien", "duong", "Giá trị tồn (vốn)", dd(ds.reduce(function (a, h) { return a + Math.max(0, h.ton) * h.gn; }, 0))) : "") + kpi("canh", "cam", "Sắp hết", sap) + kpi("canh", "do", "Hết hàng", het) + kpi("lich", "tim", "Sắp hết hạn", hs.length) + "</div>" +
     (KHO_LOC === "cham" ? '<div class="canh c-cam" style="margin-bottom:14px">' + IC.canh.replace("<svg", '<svg style="width:20px;height:20px;flex:none"') + "<div><b>" + Object.keys(cham).length + " món còn hàng nhưng 30 ngày nay không bán được</b><br><span class=\"nho\">Vốn đang nằm: " + dd(S.hang.filter(function (h) { return cham[h.ma]; }).reduce(function (a, h) { return a + h.ton * h.gn; }, 0)) + ". Cân nhắc giảm giá, khuyến mãi hoặc thôi nhập.</span></div></div>" : "") +
     '<div class="the"><div class="timbox">' + IC.tim + '<input id="kho-tim" placeholder="Tìm tên, mã, mã vạch, nhóm…" value="' + esc(KHO_TIM) + '"></div><div class="chips">' + [["tat", "Đang bán"], ["sap", "Sắp hết"], ["het", "Hết hàng"], ["hsd", "Sắp hết hạn"], ["cham", "Bán chậm"], ["ngung", "Ngừng bán"]].map(function (c) { return '<button class="chip' + (KHO_LOC === c[0] ? " on" : "") + '" data-kloc="' + c[0] + '">' + c[1] + "</button>"; }).join("") + "</div>" +
@@ -1762,22 +1764,46 @@ function veHang() {
     (chu ? '<div class="the"><h2>Phiếu nhập / kiểm kho gần đây</h2>' + (S.pn.length ? S.pn.slice(-12).reverse().map(function (p) { return '<div class="dong bam" data-xem-pn="' + esc(p.so) + '"><div class="nd"><b>' + esc(p.so) + (p.loai === "kiem" ? ' <span class="tag c-cam">Kiểm kho</span>' : "") + "</b><small>" + ngayVN(p.ngay) + (p.ncc && p.loai !== "kiem" ? " · " + esc(p.ncc) : "") + " · " + p.d.length + ' mặt hàng</small></div><b class="so">' + dd(p.tien) + "</b></div>"; }).join("") : '<div class="trong">Chưa nhập hàng lần nào</div>') + "</div>" : "");
 }
 var ANH_MOI = null;
+// tra tên sản phẩm theo mã vạch trên kho dữ liệu công khai Open Food Facts / Open Products Facts (chỉ gửi số mã vạch)
+var TRA_TEN = lsDoc("th_tra", {}) || {};
+function traTen(mv) {
+  mv = String(mv || "").trim(); if (!/^\d{8,14}$/.test(mv)) return Promise.resolve("");
+  if (TRA_TEN[mv]) return Promise.resolve(TRA_TEN[mv]);
+  var mot = function (goc) {
+    return fetch("https://" + goc + "/api/v2/product/" + mv + ".json?fields=product_name,product_name_vi,generic_name,brands,quantity").then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) {
+      var p = j && j.status === 1 && j.product; if (!p) return "";
+      var ten = String(p.product_name_vi || p.product_name || p.generic_name || "").replace(/\s+/g, " ").trim(); if (!ten) return "";
+      var th = String(p.brands || "").split(",")[0].trim(); if (th && th.length <= 24 && boDau(ten).indexOf(boDau(th.split(/\s+/)[0])) < 0) ten = th + " " + ten;
+      var q = String(p.quantity || "").trim(); if (q && boDau(ten).replace(/\s/g, "").indexOf(boDau(q).replace(/\s/g, "")) < 0) ten += " " + q;
+      return ten.slice(0, 90);
+    }).catch(function () { return ""; });
+  };
+  var het = new Promise(function (ok) { setTimeout(function () { ok(""); }, 6000); });
+  return Promise.race([mot("world.openfoodfacts.org").then(function (t) { return t || mot("world.openproductsfacts.org"); }), het]).then(function (t) { if (t) { TRA_TEN[mv] = t; lsGhi("th_tra", TRA_TEN); } return t; });
+}
+function dienTen(mv, idTen, idChu, sau) {   // điền tên vào ô nếu ô còn trống
+  var c = $(idChu); if (c) c.textContent = "🔎 Đang tìm tên theo mã vạch…";
+  traTen(mv).then(function (t) { var o = $(idTen), c2 = $(idChu); if (!o) return;
+    if (t && !o.value.trim()) { o.value = t; if (c2) c2.textContent = "✓ Tên tự điền theo mã vạch — sửa lại nếu chưa đúng"; if (sau) setTimeout(function () { sau(o); }, 150); }
+    else if (c2) c2.textContent = t ? "" : "Không tìm thấy tên theo mã này — gõ tên vào"; });
+}
 function formHang(ma, mvMoi, tenMoi) {
   var h = ma ? (mvMoi ? Object.assign({}, hang(ma), {mv: mvMoi}) : hang(ma)) : {ma: "", ten: tenMoi || "", nhom: NHOM !== "Tất cả" ? NHOM : "", dv: "", gn: "", gb: "", ton0: "", min: "", mv: mvMoi || "", ngung: false};
   var nhom = S.hang.map(function (x) { return x.nhom; }).filter(function (x, i, a) { return x && a.indexOf(x) === i; }).sort();
   ANH_MOI = undefined;
   hop(ma ? "Sửa mặt hàng" : "Thêm mặt hàng",
     '<div class="anh-sua"><span id="h-anh-xem">' + thumb(h.ma ? h : {ma: "", ten: h.ten || "?", nhom: h.nhom}) + '</span><div><label class="btn" style="cursor:pointer">' + IC.anh + 'Chụp / chọn ảnh<input type="file" accept="image/*" id="h-anh" hidden></label>' + (ANH[h.ma] ? ' <button class="btn nho do" id="h-anh-xoa">Bỏ ảnh</button>' : "") + '<div class="mo nho" style="margin-top:6px">Ảnh tự thu nhỏ, hiện trên màn hình bán hàng.</div></div></div>' +
-    '<label class="f">Tên hàng<input id="h-ten" value="' + esc(h.ten) + '" placeholder="VD: Mì Hảo Hảo tôm chua cay"' + (ma ? "" : " autofocus") + "></label>" +
+    '<label class="f">Tên hàng<input id="h-ten" value="' + esc(h.ten) + '" placeholder="VD: Mì Hảo Hảo tôm chua cay"' + (ma ? "" : " autofocus") + "></label>" + (!ma && h.mv ? '<div class="mo nho" id="h-tra" style="margin:-6px 0 10px"></div>' : "") +
     '<div class="hai"><label class="f">Nhóm<input id="h-nhom" list="h-nhom-ds" value="' + esc(h.nhom) + '" placeholder="Đồ uống, Gia vị…"><datalist id="h-nhom-ds">' + nhom.map(function (x) { return '<option value="' + esc(x) + '">'; }).join("") + '</datalist></label><label class="f">Đơn vị tính<input id="h-dv" value="' + esc(h.dv) + '" placeholder="gói, chai, kg…"></label></div>' +
     '<div class="hai"><label class="f">Giá vốn (đ)<input id="h-gn" type="number" inputmode="numeric" min="0" value="' + esc(h.gn) + '"></label><label class="f">Giá bán (đ)<input id="h-gb" type="number" inputmode="numeric" min="0" value="' + esc(h.gb) + '"></label></div>' +
     '<div class="lai-o"><label class="f">Lãi (%)<input id="h-lai" type="number" inputmode="decimal" min="0" step="1" value="' + ptLai(+h.gn, +h.gb) + '" placeholder="VD: 20"></label><div class="lai-goi">' + [10, 15, 20, 25, 30, 40].map(function (v) { return '<button type="button" data-lai-pt="' + v + '">' + v + "%</button>"; }).join("") + '</div></div><div class="mo nho lai-chu" id="h-lai-chu">' + goiLai(+h.gn, +h.gb) + "</div>" +
-    '<div class="hai">' + (ma ? '<label class="f">Tồn hiện tại<input value="' + soVN(h.ton) + " " + esc(h.dv) + '" disabled></label>' : '<label class="f">Tồn ban đầu<input id="h-ton0" type="number" inputmode="decimal" min="0" value="' + esc(h.ton0) + '" placeholder="0"></label>') + '<label class="f">Báo sắp hết khi còn ≤<input id="h-min" type="number" inputmode="decimal" min="0" value="' + esc(h.min) + '" placeholder="0 = không báo"></label></div>' +
+    '<div class="hai">' + (ma ? '<label class="f">Tồn hiện tại<input value="' + soVN(h.ton) + " " + esc(h.dv) + '" disabled></label>' : '<label class="f">' + (TRANG === "ban" && !NH_TAM && h.mv ? "Số đang có (để bán ngay)" : "Tồn ban đầu") + '<input id="h-ton0" type="number" inputmode="decimal" min="0" value="' + esc(h.ton0) + '" placeholder="0"></label>') + '<label class="f">Báo sắp hết khi còn ≤<input id="h-min" type="number" inputmode="decimal" min="0" value="' + esc(h.min) + '" placeholder="0 = không báo"></label></div>' +
     '<label class="f">Mã vạch (quét vào ô này)<span style="display:flex;gap:8px;margin-top:5px"><input id="h-mv" style="margin:0" value="' + esc(h.mv) + '" placeholder="VD: 8934563138165">' + (window.CO_CAM ? '<button class="btn" type="button" data-cam="mv" title="Quét bằng camera">' + IC.cam + "</button>" : "") + "</span></label>" +
     '<div class="khung-thung"><b>Nhập theo thùng / lốc</b> <span class="mo nho">(bỏ trống nếu không có)</span><div class="hai" style="margin-top:8px"><label class="f">Đơn vị lớn<input id="h-dvl" value="' + esc(h.dvl || "") + '" placeholder="thùng, lốc, hộp…"></label><label class="f">1 đơn vị lớn = bao nhiêu ' + esc(h.dv || "cái") + '<input id="h-qd" type="number" inputmode="numeric" min="0" value="' + esc(h.qd || "") + '" placeholder="VD: 24"></label></div><label class="f" style="margin-bottom:0">Mã vạch trên thùng<input id="h-mvl" value="' + esc(h.mvl || "") + '" placeholder="Quét mã in trên thùng (nếu có)"></label></div>' +
     (ma ? '<label class="ck"><input type="checkbox" id="h-ngung"' + (h.ngung ? " checked" : "") + '> Ngừng bán (ẩn khỏi màn hình bán hàng)</label><p class="mo nho">Mã ' + esc(h.ma) + '. Sửa số tồn bằng <b>Kiểm kho</b>; giá vốn tự cập nhật khi nhập hàng.</p>' : "") +
     '<button class="btn chinh lon" id="h-luu" data-ma="' + esc(ma || "") + '" style="margin-top:6px">Lưu mặt hàng</button>' +
     (ma ? '<button class="xoa-hang" type="button" data-xoa-hang="' + esc(ma) + '">🗑 Xoá hẳn mặt hàng (chỉ khi tạo nhầm, chưa nhập / bán)</button>' : ""));
+  if (!ma && h.mv && !h.ten) dienTen(h.mv, "h-ten", "h-tra", function (o) { if (document.activeElement === o) { var g = $("h-gb"); if (g) g.focus(); } });
 }
 function nenAnh(file, cb) {
   var r = new FileReader();
@@ -1833,6 +1859,45 @@ function nhapThem(t) {
 // quét xong: con trỏ nhảy vào ô số lượng của dòng đó (gõ số đè lên), Enter quay về ô quét
 function oSoLuong(i) { setTimeout(function () { var o = document.querySelector('[data-n="' + i + '|sl"]'); if (o) { o.focus(); o.select(); } }, 60); }
 var NH_TAM = null;
+var KD = null;
+function formKKD() {
+  KD = KD || {ds: [], cho: Promise.resolve(), dang: 0};
+  hop("Quét kiểm kho", '<p class="mo nho" style="margin-top:-8px">Quét lần lượt từng món trên kệ. <b>Món đã có</b>: gõ số đếm được. <b>Món mới</b>: app tự tìm tên, anh gõ giá bán và số lượng. Mỗi món tự lưu ngay, cứ quét tiếp.</p>' +
+    '<div class="timbox">' + IC.tim + '<input id="kd-tim" placeholder="Quét mã vạch hoặc gõ tên hàng rồi Enter…" autocomplete="off" autofocus>' + (window.CO_CAM ? '<button class="cam-nut" data-cam="kd" title="Quét bằng camera">' + IC.cam + "</button>" : "") + "</div>" +
+    '<div id="kd-o"></div><div id="kd-ds">' + veKD() + '</div><button class="btn lon" data-dong="1" style="margin-top:12px">Xong</button>', true);
+}
+function veKD() {
+  var n = KD.ds.length; if (!n) return '<div class="trong nho">Chưa kiểm món nào</div>';
+  return '<h4 style="margin:14px 0 6px">Đã kiểm ' + n + " món" + (KD.dang ? " · đang lưu " + KD.dang + "…" : " · đã lưu hết ✓") + "</h4>" + KD.ds.slice().reverse().slice(0, 40).map(function (x) {
+    return '<div class="dong"><div class="nd"><b>' + esc(x.ten) + "</b><small>" + esc(x.ct) + '</small></div><span class="tag ' + (x.tt === "ok" ? "c-xanh" : x.tt === "loi" ? "c-do" : "c-cam") + '">' + (x.tt === "ok" ? "✓ đã lưu" : x.tt === "loi" ? "lỗi" : "đang lưu…") + "</span></div>"; }).join("");
+}
+function kdVe() { var o = $("kd-ds"); if (o) o.innerHTML = veKD(); }
+function kdVeQuet() { var v = $("kd-o"); if (v) v.innerHTML = ""; var o = $("kd-tim"); if (o) { o.value = ""; o.focus(); } }
+function kdGui(muc, fn, arg) {   // gửi máy chủ lần lượt ở nền, người dùng không phải chờ
+  muc.tt = "cho"; KD.ds.push(muc); KD.dang++; kdVe();
+  KD.cho = KD.cho.then(function () { return goi(fn, arg); }).then(function (o) { muc.tt = "ok"; nhan(o); })
+    .catch(function (e) { muc.tt = "loi"; muc.ct += " · " + ((e && e.message) || e); }).then(function () { KD.dang--; kdVe(); });
+}
+function kdQuet(t) {
+  t = String(t || "").trim(); var o = $("kd-tim"); if (o) o.value = ""; if (!t || !KD) return;
+  var h = S.hang.find(function (x) { return x.mv === t || x.mvl === t || x.ma.toLowerCase() === t.toLowerCase(); });
+  if (!h && !/^\d{6,}$/.test(t)) { var b = boDau(t), l = S.hang.filter(function (x) { return !x.ngung && boDau(x.ten).indexOf(b) >= 0; }); if (l.length === 1) h = l[0]; }
+  var v = $("kd-o"); if (!v) return;
+  if (!h && KD.ds.some(function (x) { return x.mv === t && x.tt === "cho"; })) { bip(false); bao("Món này vừa thêm, đang lưu — đợi vài giây rồi quét lại"); return; }
+  if (h) {
+    bip(true); var thung = h.mvl === t && h.qd > 1;
+    v.innerHTML = '<div class="the kd-the"><div class="dong" style="border:0;padding:0">' + thumb(h) + '<div class="nd"><b>' + esc(h.ten) + "</b><small>Trên app: " + soVN(h.ton) + " " + esc(h.dv) + (thung ? " · đang quét mã thùng (1 " + esc(h.dvl) + " = " + h.qd + " " + esc(h.dv) + ")" : "") + '</small></div></div><div class="ky-dong" style="margin-top:10px"><input id="kd-sl" type="number" inputmode="decimal" min="0" placeholder="Đếm được bao nhiêu ' + esc(thung ? h.dvl : (h.dv || "cái")) + '?"><button class="btn chinh" data-kd-luu="' + esc(h.ma) + '" data-qd="' + (thung ? h.qd : 1) + '">Lưu</button></div></div>';
+    setTimeout(function () { var s1 = $("kd-sl"); if (s1) s1.focus(); }, 50); return;
+  }
+  if (!/^\d{6,}$/.test(t)) { bip(false); bao("Không thấy hàng: " + t); return; }
+  bip(false);
+  v.innerHTML = '<div class="the kd-the"><b>Mã mới ' + esc(t) + '</b><div class="mo nho" id="kd-tra"></div><label class="f">Tên hàng<input id="kd-ten" placeholder="VD: Mì Hảo Hảo tôm chua cay"></label>' +
+    '<div class="hai"><label class="f">Giá bán (đ)<input id="kd-gb" type="number" inputmode="numeric" min="0"></label><label class="f">Số lượng đang có<input id="kd-sl" type="number" inputmode="decimal" min="0"></label></div>' +
+    '<div class="hai"><label class="f">Giá vốn (đ) <span class="mo nho">không bắt buộc</span><input id="kd-gn" type="number" inputmode="numeric" min="0"></label><label class="f">Đơn vị<input id="kd-dv" placeholder="gói, chai, lon…"></label></div>' +
+    '<button class="btn chinh lon" data-kd-moi="' + esc(t) + '">Lưu & quét tiếp</button></div>';
+  setTimeout(function () { var o3 = $("kd-ten"); if (o3) o3.focus(); }, 50);
+  dienTen(t, "kd-ten", "kd-tra", function (o4) { if (document.activeElement === o4) { var g = $("kd-gb"); if (g) g.focus(); } });
+}
 function formKiem() {
   var ds = S.hang.filter(function (h) { return !h.ngung; }).sort(function (a, b) { return a.nhom.localeCompare(b.nhom) || a.ten.localeCompare(b.ten); });
   hop("Kiểm kho", '<p class="mo nho" style="margin-top:-8px">Đếm hàng thực tế rồi điền vào ô. Ô để trống = không kiểm. Chênh lệch sẽ ghi phiếu điều chỉnh.</p><input id="kiem-tim" placeholder="Lọc nhanh…" style="margin-bottom:8px">' +
@@ -2127,7 +2192,11 @@ document.addEventListener("click", function (e) {
       var xong = function () {
         dongHop(); nhan(o);
         if (NH_TAM && !ma && o.vuaMa) { NH = NH_TAM; NH_TAM = null; NH.dong.push({ma: o.vuaMa, sl: 1, gn: +gh.gn || 0, hsd: ""}); formNhap(NH.dong.length - 1); bao("Đã thêm mặt hàng, gõ số lượng nhập"); return; }
-        NH_TAM = null; if (TRANG === "ban" && !ma && o.vuaMa) { TIM = ""; themHang(o.vuaMa); } bao("Đã lưu mặt hàng ✓"); };
+        NH_TAM = null;
+        if (TRANG === "ban" && !ma && o.vuaMa) { TIM = ""; var hm = hang(o.vuaMa);
+          if (hm.ton > 0) { if (themHang(hm.ma)) { bip(true); baoGia(hm.ten, hm.gb, 1, hm.dv, hm.ma); } return; }
+          thanhNut("Đã thêm " + hm.ten + " · chưa có số lượng nên chưa vào đơn", "Nhập hàng", function () { NH = null; formNhap(); nhapThem(hm.ma); }); return; }
+        bao("Đã lưu mặt hàng ✓"); };
       if (anh === undefined) return xong();
       return goi("luuAnh", o.vuaMa, anh).then(function () { if (anh) ANH[o.vuaMa] = anh; else delete ANH[o.vuaMa]; lsGhi("th_anh", ANH); xong(); }).catch(function (e3) { xong(); loiBao(e3); });
     }).catch(function (e2) { t.disabled = false; loiBao(e2); }); return; }
@@ -2136,6 +2205,12 @@ document.addEventListener("click", function (e) {
   if ((b = t.closest("[data-nxoa]"))) { nhoNhap(); NH.dong.splice(+b.dataset.nxoa, 1); formNhap(); return; }
   if (t.id === "n-luu") { nhoNhap(); var ds2 = NH.dong.filter(function (x) { return x.ma && +x.sl > 0; }).map(function (x) { var h = hang(x.ma), q = x.lon && h.qd > 1 ? h.qd : 1; return {ma: x.ma, sl: Math.round((+x.sl) * q * 1000) / 1000, gn: Math.round((+x.gn || 0) / q), hsd: isoTu(x.hsd), gb: x.gb === undefined || x.gb === "" ? undefined : Math.round(+x.gb)}; }); if (!ds2.length) { alert("Thêm hàng và số lượng"); return; } sau(t, goi("nhapHang", {ncc: NH.ncc, gc: NH.gc, dong: ds2, daTra: NH.cach === "du" ? 1e15 : NH.cach === "no" ? 0 : +NH.daTra || 0}), "").then(function (o) { if (o && o.vua) { var sv = o.vua; thanhNut("✓ Đã nhập hàng · " + sv, "Nhập nhầm? Xoá", function () { if (!confirm("Xoá phiếu " + sv + "?\nTồn kho trừ lại, xoá tiền đã trả và nợ nhà cung cấp của phiếu, giá vốn tính lại.")) return; goi("xoaPhieuNhap", sv).then(function (o2) { nhan(o2); bao("Đã xoá phiếu " + sv); }).catch(loiBao); }); } else if (o) bao("Đã nhập hàng ✓"); }); return; }
   if (t.closest("[data-kiem]")) { formKiem(); return; }
+  if (t.closest("[data-kkd]")) { formKKD(); return; }
+  if ((b = t.closest("[data-kd-luu]"))) { var hk = hang(b.dataset.kdLuu), vk = $("kd-sl").value; if (vk === "") { $("kd-sl").focus(); return; } var dk = Math.round(+vk * (+b.dataset.qd || 1) * 1000) / 1000, ctk = "Đếm " + soVN(dk) + " " + (hk.dv || "") + " (app ghi " + soVN(hk.ton) + ")";
+    if (dk === hk.ton) { KD.ds.push({ten: hk.ten, ct: ctk + " · khớp", tt: "ok"}); kdVe(); } else kdGui({ten: hk.ten, ct: ctk}, "kiemKho", [{ma: hk.ma, dem: dk}]); kdVeQuet(); return; }
+  if ((b = t.closest("[data-kd-moi]"))) { var tn = $("kd-ten").value.trim(), gbn = Math.round(+$("kd-gb").value || 0), sln = +$("kd-sl").value || 0;
+    if (!tn) { $("kd-ten").focus(); bao("Gõ tên hàng"); return; } if (!(gbn > 0)) { $("kd-gb").focus(); bao("Gõ giá bán"); return; }
+    kdGui({ten: tn, mv: b.dataset.kdMoi, ct: "Món mới · " + soVN(sln) + " · bán " + so(gbn) + "đ"}, "hangLuu", {moi: true, ten: tn, gb: gbn, gn: Math.round(+$("kd-gn").value || 0), dv: $("kd-dv").value.trim(), mv: b.dataset.kdMoi, ton0: sln, nhom: "", min: "", dvl: "", qd: "", mvl: "", ngung: false}); kdVeQuet(); return; }
   if (t.id === "k-luu") { var ds3 = []; document.querySelectorAll("[data-kiem-ma]").forEach(function (x) { if (x.value !== "") ds3.push({ma: x.dataset.kiemMa, dem: +x.value}); }); if (!ds3.length) { alert("Chưa điền số đếm"); return; } sau(t, goi("kiemKho", ds3), "Đã cập nhật tồn kho ✓"); return; }
   if (t.closest("[data-tem]")) { formTem(); return; }
   if (t.id === "tem-in") { inTem(); return; }
@@ -2235,6 +2310,8 @@ document.addEventListener("keydown", function (e) {
   if (!S && e.key === "Enter" && t.id && t.id.indexOf("tc-") === 0) { e.preventDefault(); var ok = $("tc-ok"); if (ok) ok.click(); return; }
   if (e.key === "Enter" && t.id === "tim") { e.preventDefault(); timEnter(); return; }
   if (e.key === "Enter" && t.id === "n-tim") { e.preventDefault(); nhapThem(t.value); return; }
+  if (e.key === "Enter" && t.id === "kd-tim") { e.preventDefault(); kdQuet(t.value); return; }
+  if (e.key === "Enter" && /^kd-(sl|ten|gb|gn|dv)$/.test(t.id || "")) { e.preventDefault(); var thu = ["kd-ten", "kd-gb", "kd-sl"], i9 = thu.indexOf(t.id); if (i9 >= 0 && i9 < 2 && $(thu[i9 + 1]) && !$(thu[i9 + 1]).value) { $(thu[i9 + 1]).focus(); return; } var nb = document.querySelector("[data-kd-luu],[data-kd-moi]"); if (nb) nb.click(); return; }
   if (e.key === "Enter" && t.dataset && t.dataset.n) {
     e.preventDefault(); var v = String(t.value).trim();
     // lỡ quét mã vạch khi con trỏ đang ở ô số -> trả số cũ, coi như quét
