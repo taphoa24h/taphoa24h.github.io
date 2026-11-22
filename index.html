@@ -36,6 +36,8 @@ header h1 small{display:block;font-size:11.5px;font-weight:500;color:var(--mo);l
 .chip-h svg{width:16px;height:16px;color:var(--mo)}
 #dongbo{width:9px;height:9px;border-radius:50%;background:#10b981;flex:none}
 #dongbo.dang{background:#f59e0b}#dongbo.loi{background:#ef4444}
+#mang-bao{position:fixed;left:50%;transform:translateX(-50%);top:70px;z-index:40;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.15);max-width:calc(100% - 24px);text-align:center;cursor:default}
+#mang-bao.mat{background:#1f2937;color:#fde68a}#mang-bao.cho{background:#fffbeb;color:#92400e;border:1px solid #fcd34d}#mang-bao.loi{background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;cursor:pointer}#mang-bao[hidden]{display:none}
 #dongho{font-weight:600;font-size:13px;color:var(--mo);white-space:nowrap}
 nav{position:fixed;z-index:19;background:#fff}
 nav button{display:flex;align-items:center;gap:11px;border:0;background:none;color:#4b5b53;cursor:pointer;font-weight:600;position:relative}
@@ -509,11 +511,67 @@ function napDon() { var o = lsDoc("th_don", null); if (o && Array.isArray(o.d) &
 function gio() { return DON[CUR].d; }
 
 // ---------- gọi máy chủ ----------
+// ===== BÁN KHI MẤT MẠNG =====
+var MANG = true, DANG_GUI = false;
+function laLoiMang(e) { return /Không kết nối được máy chủ|NetworkError|Failed to fetch|Load failed|HTTP 0|network/i.test(String((e && e.message) || e)); }
+function choDS() { return lsDoc("th_cho", []) || []; }
+function luuSnap(o) { try { localStorage.setItem("th_snap", JSON.stringify(o)); } catch (e) { try { var b = JSON.parse(JSON.stringify(o)); b.hd = (b.hd || []).slice(0, 150); localStorage.setItem("th_snap", JSON.stringify(b)); } catch (e2) {} } }
+function lucVN() { var d = gioVN(); return iso(d) + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") + ":" + String(d.getSeconds()).padStart(2, "0"); }
+// phủ các đơn đang chờ gửi lên dữ liệu: trừ tồn + hiện hoá đơn tạm
+function phuCho(o) {
+  var ds = choDS(); if (!ds.length || !o || !o.hang) return o;
+  ds.forEach(function (c) {
+    if ((o.hd || []).some(function (x) { return x.so === c.id; })) return;
+    var tien = 0, d = c.g.dong.map(function (x) { var h = o.hang.find(function (y) { return y.ma === x.ma; }); if (h) h.ton = Math.round((h.ton - x.sl) * 1000) / 1000; tien += Math.round(x.sl * x.gia); return {ma: x.ma, ten: h ? h.ten : x.ma, sl: x.sl, gia: x.gia}; });
+    var giam = Math.min(tien, (+c.g.giam || 0) + ((c.g.km && +c.g.km.tong) || 0));
+    (o.hd = o.hd || []).unshift({so: c.id, luc: c.lucVN, khach: c.g.khach || "", sdt: c.g.sdt || "", tien: tien, giam: giam, phai: tien - giam, cach: c.g.cach, dua: +c.g.dua || 0, von: 0, lai: 0, tt: "xong", d: d, nb: (S && S.u && S.u.ten) || "", cho: true, gc: "Bán lúc mất mạng — chờ gửi lên máy chủ"});
+  });
+  return o;
+}
+// đơn không gửi được vì mất mạng -> lưu vào hàng chờ
+function choThem(g) {
+  var id = "C" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ds = choDS();
+  g = JSON.parse(JSON.stringify(g)); g.ma = id; g.luc = new Date().toISOString();
+  ds.push({id: id, g: g, lucVN: lucVN()}); lsGhi("th_cho", ds);
+  var snap = lsDoc("th_snap", null); if (snap) S = phuCho(snap); veMang(); return id;
+}
+// gửi lần lượt các đơn chờ
+function guiCho() {
+  var ds = choDS(); if (DANG_GUI || !ds.length || !DN.pin) { veMang(); return; }
+  DANG_GUI = true; veMang(); var c = ds[0];
+  goi("thanhToan", c.g).then(function (o) {
+    lsGhi("th_cho", choDS().filter(function (x) { return x.id !== c.id; }));
+    var snap = lsDoc("th_snap", null); S = phuCho(snap || o); DANG_GUI = false; if ($("hop").hidden) ve(); veMang();
+    if (!choDS().length) bao("✓ Đã gửi hết đơn bán lúc mất mạng"); else guiCho();
+  }).catch(function (e) {
+    DANG_GUI = false;
+    if (!laLoiMang(e)) { var l = lsDoc("th_cho_loi", []) || []; c.loi = String((e && e.message) || e); l.push(c); lsGhi("th_cho_loi", l); lsGhi("th_cho", choDS().filter(function (x) { return x.id !== c.id; })); bao("Một đơn bán lúc mất mạng bị máy chủ từ chối — xem thanh báo đỏ"); guiCho(); }
+    veMang();
+  });
+}
+function veMang() {
+  var o = $("mang-bao"); if (!o) { o = document.createElement("div"); o.id = "mang-bao"; document.body.appendChild(o); }
+  var n = choDS().length, l = (lsDoc("th_cho_loi", []) || []).length, t = "", cls = "";
+  if (!MANG) { t = "Mất mạng — vẫn bán được bình thường" + (n ? " · " + n + " đơn chờ gửi" : ""); cls = "mat"; }
+  else if (n) { t = (DANG_GUI ? "Đang gửi " : "") + n + " đơn bán lúc mất mạng" + (DANG_GUI ? "…" : " chờ gửi"); cls = "cho"; }
+  if (l) { t = (t ? t + " · " : "") + l + " đơn bị từ chối — bấm để xem"; cls = "loi"; }
+  o.textContent = t; o.className = cls; o.hidden = !t; document.body.classList.toggle("co-mang-bao", !!t);
+}
+function xemChoLoi() {
+  var l = lsDoc("th_cho_loi", []) || []; if (!l.length) return;
+  hop("Đơn bán lúc mất mạng bị từ chối", '<p class="mo nho" style="margin-top:-6px">Máy chủ không nhận các đơn này (lý do ghi bên dưới). Hàng <b>chưa bị trừ kho</b>. Kiểm tra rồi bán lại nếu cần, sau đó bấm Bỏ.</p>' +
+    l.map(function (c, i) { var t = c.g.dong.reduce(function (a, x) { return a + Math.round(x.sl * x.gia); }, 0); return '<div class="the" style="padding:12px;margin:8px 0"><b>' + esc(c.lucVN.slice(11, 16)) + " " + esc(ngayVN(c.lucVN)) + " · " + dd(t) + '</b><div class="mo nho">' + c.g.dong.map(function (x) { var h = hang(x.ma); return esc(h ? h.ten : x.ma) + " ×" + soVN(x.sl); }).join(", ") + '</div><div class="nho" style="color:var(--do);margin:4px 0 8px">' + esc(c.loi) + '</div><div class="hai"><button class="btn" data-cho-lai="' + i + '">Đưa lại vào giỏ</button><button class="btn do" data-cho-bo="' + i + '">Bỏ</button></div></div>'; }).join(""));
+}
+window.addEventListener("online", function () { MANG = true; veMang(); setTimeout(guiCho, 800); });
+window.addEventListener("offline", function () { MANG = false; veMang(); });
+setInterval(function () { if (choDS().length && !DANG_GUI) guiCho(); }, 20000);
 function trangThai(t) { var o = $("dongbo"); if (o) o.className = t || ""; }
 function goi(fn) {
   var a = Array.prototype.slice.call(arguments, 1); trangThai("dang");
   return new Promise(function (ok, loi) {
-    var xong = function (s) { trangThai(""); ok(typeof s === "string" ? JSON.parse(s) : s); }, hong = function (e) { trangThai("loi"); loi(e); };
+    var xong = function (s) { trangThai(""); var o = typeof s === "string" ? JSON.parse(s) : s; if (o && Array.isArray(o.hang)) { luuSnap(o); phuCho(o); } MANG = true; veMang(); ok(o); },
+      hong = function (e) { if (laLoiMang(e)) { MANG = false; veMang(); } trangThai("loi"); loi(e); };
+    if (!THAT && window.MAT_MANG) { setTimeout(function () { hong(new Error("Không kết nối được máy chủ — kiểm tra mạng rồi thử lại")); }, 100); return; }
     if (!THAT) { setTimeout(function () { try { xong(MAU(fn, [CH.k + "|" + (DN.ma || "") + "|" + (DN.pin || "")].concat(a))); } catch (e) { hong(e); } }, 150); return; }
     fetch(API, {method: "POST", body: JSON.stringify({fn: fn, args: [CH.k + "|" + (DN.ma || "") + "|" + (DN.pin || "")].concat(a)})})
       .then(function (r) { return r.json(); })
@@ -601,7 +659,7 @@ function manTaoChu() {
   setTimeout(function () { var n = $("tc-ten"); if (n) n.focus(); }, 50);
 }
 function dnDocNho() { try { return !!localStorage.getItem("th_dn"); } catch (e) { return true; } }
-function dangXuat() { DN = {}; dnGhi(null); DN_CHON = null; S = null; dongHop(); moDN(); }
+function dangXuat() { if (choDS().length && !confirm("Còn " + choDS().length + " đơn bán lúc mất mạng chưa gửi. Đăng xuất thì phải đăng nhập lại mới gửi được. Vẫn đăng xuất?")) return; try { localStorage.removeItem("th_snap"); } catch (e) {} DN = {}; dnGhi(null); DN_CHON = null; S = null; dongHop(); moDN(); }
 // ===== TỔNG QUAN =====
 function goiYNhap() {
   var moc = congNgay(homNay(), -29), ban = {};
@@ -856,6 +914,7 @@ function guiNhanh(cach) {
     bao("✓ Đã thu " + dd(phai) + (cach === "ck" ? " (chuyển khoản)" : "") + " · " + o.vua);
     if (lsDoc("th_in", false)) inHD(o.vua);
   }).catch(function (e) {
+    if (laLoiMang(e)) { choThem({dong: don.d, giam: 0, cach: cach, dua: 0, khach: "", sdt: "", km: kmN}); if ($("hop").hidden) ve(); bao("📴 Mất mạng — đã lưu đơn " + dd(phai) + " trên máy, có mạng sẽ tự gửi"); return; }
     if (!gio().length) DON[CUR] = don; else { DON.push(don); CUR = DON.length - 1; } luuDon(); ve();
     loiBao(e); bao("Chưa lưu được, đơn đã trả lại giỏ");
   });
@@ -907,7 +966,15 @@ function xongTT(nut) {
     hop("Đã thanh toán ✓", '<div class="phai-tra"><span>' + esc(o.vua) + '</span><b class="so">' + dd(phai) + "</b></div>" + (tra !== null && tra > 0 ? '<div class="hang-tong" style="font-size:19px"><span>Tiền thối lại</span><b class="xanh-chu so">' + dd(tra) + "</b></div>" : "") +
       '<div class="hai" style="margin-top:16px"><button class="btn lon" data-in="' + esc(o.vua) + '">' + IC.in + 'In hoá đơn</button><button class="btn chinh lon" data-dong="1" autofocus>Đơn mới</button></div>');
     if (coIn) inHD(o.vua);
-  }).catch(function (e) { nut.disabled = false; nut.textContent = "Xác nhận · " + dd(phai); loiBao(e); });
+  }).catch(function (e) {
+    if (laLoiMang(e)) {
+      var tra2 = TT.cach === "tm" && TT.dua ? TT.dua - phai : null;
+      choThem({dong: gio(), giam: TT.giam, cach: TT.cach, dua: TT.dua, khach: TT.khach, sdt: TT.sdt, diemDung: TT.diemDung || 0, km: tinhKM(gio())});
+      DON.splice(CUR, 1); if (!DON.length) DON = [{d: []}]; CUR = Math.min(CUR, DON.length - 1); luuDon(); XEM_GIO = false; dongHop(); ve();
+      hop("Đã lưu trên máy 📴", '<p class="mo" style="margin-top:-4px">Đang mất mạng nên đơn được lưu tạm trên máy này. Có mạng lại app sẽ <b>tự gửi lên</b>, giữ đúng giờ bán.</p><div class="phai-tra"><span>Phải thu</span><b class="so">' + dd(phai) + "</b></div>" + (tra2 !== null && tra2 > 0 ? '<div class="hang-tong" style="font-size:19px"><span>Tiền thối lại</span><b class="xanh-chu so">' + dd(tra2) + "</b></div>" : "") + '<button class="btn chinh lon" style="margin-top:14px" data-dong="1" autofocus>Đơn mới</button>');
+      return;
+    }
+ nut.disabled = false; nut.textContent = "Xác nhận · " + dd(phai); loiBao(e); });
 }
 
 // ---------- in ----------
@@ -994,7 +1061,8 @@ function anhHD(soHD) {
   }, "image/png");
 }
 function xemHD(soHD) {
-  var h = S.hd.find(function (x) { return x.so === soHD; }); if (!h) return; var c = CACH[h.cach] || ["", ""];
+  var h = S.hd.find(function (x) { return x.so === soHD; }); if (!h) return;
+  if (h.cho) { hop('Đơn chờ gửi <span class="tag c-cam">Chưa lên máy chủ</span>', '<p class="mo nho" style="margin-top:-6px">Bán lúc mất mạng, ' + esc(h.luc.slice(11, 16)) + " " + esc(ngayVN(h.luc)) + '. Có mạng app sẽ tự gửi; sau đó mới có số hoá đơn chính thức.</p><table class="bang"><tbody>' + h.d.map(function (x) { return "<tr><td>" + esc(x.ten) + '</td><td class="r">' + soVN(x.sl) + '</td><td class="r so">' + so(Math.round(x.sl * x.gia)) + "</td></tr>"; }).join("") + '</tbody></table><div class="hang-tong lon" style="margin-top:10px"><span>Tổng</span><b class="so">' + dd(h.phai) + '</b></div><button class="btn chinh lon" style="margin-top:12px" data-gui-cho="1">Gửi ngay</button>'); return; } var c = CACH[h.cach] || ["", ""];
   hop("Hoá đơn " + esc(h.so) + (h.tt === "huy" ? ' <span class="tag c-do">Đã huỷ</span>' : ""),
     '<div class="mo nho" style="margin:-10px 0 12px">' + esc(h.luc.slice(11, 16)) + " · " + ngayVN(h.luc) + " · " + esc(h.khach || "Khách lẻ") + (h.sdt ? " · " + esc(h.sdt) : "") + (h.nb ? " · bán bởi " + esc(h.nb) : "") + ' · <span class="tag ' + c[1] + '">' + c[0] + "</span></div>" +
     '<table class="bang"><thead><tr><th>Hàng</th><th class="r">SL</th><th class="r">Giá</th><th class="r">Tiền</th></tr></thead><tbody>' + h.d.map(function (x) { return "<tr><td>" + esc(x.ten) + '</td><td class="r">' + soVN(x.sl) + '</td><td class="r so">' + so(x.gia) + '</td><td class="r so">' + so(Math.round(x.sl * x.gia)) + "</td></tr>"; }).join("") + "</tbody></table>" +
@@ -1359,6 +1427,10 @@ document.addEventListener("click", function (e) {
     t.disabled = true; goi("traHang", {so: t.dataset.so, dong: dsT, lyDo: $("tra-ly").value}).then(function (o) { dongHop(); nhan(o); bao("Đã trả hàng · " + o.vua); xemHD(o.vua); }).catch(function (e2) { t.disabled = false; loiBao(e2); }); return; }
   if ((b = t.closest("[data-xoa-no]"))) { var qn = b.dataset.xoaNo.split("|"); if (!confirm("Xoá dòng " + (qn[3] === "tra" ? "trả nợ" : "nợ") + " " + dd(qn[2]) + " của " + qn[1] + "?" + (qn[3] === "tra" ? "\nKhoản thu đi kèm trong Sổ sách cũng bị xoá." : ""))) return; sau(b, goi("xoaNo", qn[0], qn[1], +qn[2]), "Đã xoá dòng nợ").then(function () { formKH(qn[1]); }); return; }
   if ((b = t.closest("[data-hdloc]"))) { HD_LOC = b.dataset.hdloc; ve(); return; }
+  if (t.closest("#mang-bao.loi")) { xemChoLoi(); return; }
+  if (t.closest("[data-gui-cho]")) { dongHop(); guiCho(); return; }
+  if ((b = t.closest("[data-cho-lai]"))) { var l1 = lsDoc("th_cho_loi", []) || [], c1 = l1.splice(+b.dataset.choLai, 1)[0]; lsGhi("th_cho_loi", l1); if (c1) { DON.push({d: c1.g.dong}); CUR = DON.length - 1; luuDon(); TRANG = "ban"; } dongHop(); ve(); veMang(); return; }
+  if ((b = t.closest("[data-cho-bo]"))) { if (!confirm("Bỏ đơn này? (chưa được ghi vào máy chủ)")) return; var l2 = lsDoc("th_cho_loi", []) || []; l2.splice(+b.dataset.choBo, 1); lsGhi("th_cho_loi", l2); if (l2.length) xemChoLoi(); else dongHop(); veMang(); return; }
   if ((b = t.closest("[data-anh-hd]"))) { anhHD(b.dataset.anhHd); return; }
   if ((b = t.closest("[data-xem-hd]"))) { xemHD(b.dataset.xemHd); return; }
   if ((b = t.closest("[data-huy]"))) { var soH = b.dataset.huy, ly = prompt("Huỷ hoá đơn " + soH + "? Hàng sẽ được cộng lại vào kho.\nLý do:"); if (ly === null) return; sau(b, goi("huyHD", soH, ly), "Đã huỷ " + soH); return; }
@@ -1483,8 +1555,9 @@ if (THAT && !CH.dung) {
   $("trang").innerHTML = '<div class="the" style="max-width:420px;margin:60px auto;text-align:center"><h2 style="justify-content:center">Cần link của tiệm</h2><p class="mo">Mở app <b>một lần</b> bằng link chủ tiệm gửi (có đoạn <b>?k=…</b> ở cuối). Máy sẽ tự nhớ, lần sau mở từ biểu tượng trên màn hình là vào.</p><p class="mo nho" style="margin-top:14px">Hoặc dán link / gõ <b>mã tiệm</b> vào đây:</p><input id="nhapk" placeholder="Mã tiệm hoặc link có ?k=" autocomplete="off" style="width:100%;margin:6px 0 10px"><button class="btn chinh lon" onclick="var v=String(nhapk.value).trim(),m=v.split(&quot;k=&quot;);v=m.length>1?decodeURIComponent(m[1].split(&quot;&amp;&quot;)[0]):v;if(v){try{localStorage.setItem(&quot;th_k&quot;,v)}catch(e){}location.reload()}">Vào tiệm</button></div>';
 } else {
   // có đăng nhập đã nhớ -> vào thẳng; chưa có -> màn hình đăng nhập (hoặc tạo tài khoản chủ nếu tiệm chưa có ai)
-  if (DN.pin) goi("tai").then(function (o) { nhan(o); napAnh(); setTimeout(function () { var s = $("tim"); if (s && window.innerWidth >= 960) s.focus(); }, 60); }).catch(function (e) { if (String((e && e.message) || e).indexOf("CAN_PIN") >= 0) { dangXuat(); return; } $("trang").innerHTML = '<div class="the trong">Không tải được dữ liệu: ' + esc((e && e.message) || e) + "</div>"; });
+  if (DN.pin) goi("tai").then(function (o) { nhan(o); napAnh(); setTimeout(function () { var s = $("tim"); if (s && window.innerWidth >= 960) s.focus(); }, 60); }).catch(function (e) { if (String((e && e.message) || e).indexOf("CAN_PIN") >= 0) { dangXuat(); return; } var sn = laLoiMang(e) && lsDoc("th_snap", null); if (sn) { nhan(phuCho(sn)); napAnh(); bao("📴 Mất mạng — đang dùng dữ liệu đã lưu trên máy"); return; } $("trang").innerHTML = '<div class="the trong">Không tải được dữ liệu: ' + esc((e && e.message) || e) + "</div>"; });
   else moDN();
+  setTimeout(function () { veMang(); guiCho(); }, 2500);
 }
 </script>
 <script>
