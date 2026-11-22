@@ -267,6 +267,9 @@ label.ck{display:flex;gap:9px;align-items:center;margin:8px 0;cursor:pointer}lab
 .kpi4 .o{position:relative;overflow:hidden;transition:border-color .15s,box-shadow .15s;cursor:pointer}
 .kpi4 .o:hover{border-color:#cfe3d9;box-shadow:0 4px 14px rgba(16,24,20,.06)}
 .kpi4 .spark{position:absolute;right:14px;bottom:14px;width:92px;height:30px;opacity:.9}
+@media(max-width:640px){.kpi4{grid-template-columns:1fr 1fr;gap:10px}.kpi4 .o{padding:12px 13px;border-radius:14px}.kpi4 b{font-size:20px;margin:6px 0 3px;letter-spacing:-.4px}.kpi4 .ic{width:26px;height:26px;border-radius:8px}.kpi4 .ic svg{width:14px;height:14px}.kpi4 .tren{font-size:12px}.kpi4 .duoi{font-size:11.5px}.kpi4 .spark{width:56px;height:20px;right:10px;bottom:10px;opacity:.55}
+.hd-gan th:nth-child(2),.hd-gan td:nth-child(2){display:none}.hd-gan td{padding:10px 8px}.hd-gan td b{white-space:nowrap;font-size:13px}.hd-gan .gio-dt{display:block}}
+.hd-gan .gio-dt{display:none;font-size:11.5px;color:var(--mo);font-weight:500;margin-top:2px}
 .kpi4 .spark path{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tien-ct{display:grid;gap:10px}
 .tien-ct .hang-tong{padding:0}
@@ -404,7 +407,15 @@ body{letter-spacing:-.05px}
   main{padding:86px 28px 28px 264px}
   .gio-khung{top:84px}
 }
-@media(max-width:959px){nav .thuong-hieu,nav .nhom-nav,nav .nguoi-dung{display:none}}
+@media(max-width:959px){nav .thuong-hieu,nav .nhom-nav,nav .nguoi-dung{display:none}
+nav .phu{display:none!important}nav button[data-tab=tq]{order:1}nav button[data-tab=hd]{order:2}nav button[data-tab=ban]{order:3}nav button[data-tab=hang]{order:4}nav button[data-tab=kh]{order:5}nav .nut-them{order:6}
+nav{height:68px;box-shadow:0 -6px 20px rgba(13,31,23,.06)}nav button{font-size:11px;white-space:nowrap}
+nav button[data-tab=ban] svg{width:52px;height:52px;padding:14px;border-radius:50%;background:linear-gradient(135deg,#10b981,#047857);color:#fff;margin:-30px 0 1px;box-shadow:0 8px 18px rgba(5,150,105,.4),0 0 0 5px #fff}
+nav button[data-tab=ban].on svg{background:linear-gradient(135deg,#10b981,#047857);color:#fff;padding:14px;width:52px;height:52px;margin:-30px 0 1px}
+nav button[data-tab=ban] span{font-weight:700;color:var(--xanh-d)}}
+@media(min-width:960px){nav .nut-them{display:none!important}}
+.menu-them{display:grid;grid-template-columns:1fr 1fr;gap:10px}.menu-them button{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:14px;border:1px solid var(--vien);border-radius:14px;background:#fff;cursor:pointer;text-align:left;font-weight:700;font-size:14px;color:var(--chu)}
+.menu-them button small{font-weight:500;color:var(--mo);font-size:12px}.menu-them button svg{width:24px;height:24px;color:var(--xanh)}.menu-them button.do svg{color:var(--do)}.menu-them button.on{border-color:var(--xanh);background:var(--xanh-n)}
 </style>
 </head>
 <body>
@@ -530,7 +541,8 @@ function ve() {
   var canh = S.hang.filter(function (h) { return !h.ngung && (h.ton <= 0 || (h.min > 0 && h.ton <= h.min)); }).length;
   var nhomNav = {tq: "Tổng quan", ban: "Bán hàng", hang: "Quản lý", so: "Báo cáo", cd: "Hệ thống"};
   $("nav").innerHTML = '<div class="thuong-hieu"><div class="logo">' + LOGO + "</div><div><b>" + esc(S.cd.tenTiem) + "</b><small>Quản lý bán hàng</small></div></div>" +
-    tabs.map(function (t) { var dem = t[0] === "hang" && canh ? '<span class="dem">' + canh + "</span>" : ""; return (nhomNav[t[0]] && laChu() ? '<div class="nhom-nav">' + nhomNav[t[0]] + "</div>" : "") + '<button data-tab="' + t[0] + '" class="' + (TRANG === t[0] ? "on" : "") + '">' + IC[t[0]] + "<span>" + t[1] + "</span>" + dem + "</button>"; }).join("") +
+    tabs.map(function (t) { var dem = t[0] === "hang" && canh ? '<span class="dem">' + canh + "</span>" : ""; return (nhomNav[t[0]] && laChu() ? '<div class="nhom-nav">' + nhomNav[t[0]] + "</div>" : "") + '<button data-tab="' + t[0] + '" class="' + (TRANG === t[0] ? "on" : "") + (tabs.length > 5 && ["kh", "so", "cd"].indexOf(t[0]) >= 0 ? " phu" : "") + '">' + IC[t[0]] + "<span>" + t[1] + "</span>" + dem + "</button>"; }).join("") +
+    (tabs.length > 5 ? '<button class="nut-them' + (["kh", "so", "cd"].indexOf(TRANG) >= 0 ? " on" : "") + '" data-menu-them="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span>Thêm</span></button>' : "") +
     '<div class="nguoi-dung"><span class="thumb" style="' + nenHang({nhom: S.u.ten}) + '">' + esc(chuTat(S.u.ten)) + "</span><div><b>" + esc(S.u.ten) + "</b><small>" + (laChu() ? "Chủ tiệm" : "Nhân viên") + '</small></div><button data-doi-nguoi="1" title="Đăng xuất">' + IC.khoa + "</button></div>";
   var giu = document.activeElement && document.activeElement.id, pos = giu && document.activeElement.selectionStart;
   $("trang").innerHTML = {tq: veTQ, ban: veBan, hd: veHD, hang: veHang, kh: veKH, so: veSo, cd: veCD}[TRANG]();
@@ -664,7 +676,7 @@ function veTQ() {
     '<div class="tq-luoi"><div>' +
     '<div class="the"><h2>Doanh thu 30 ngày<span class="mo-nho" data-tab="so">Xem sổ sách ›</span></h2><div class="bd-dau"><b>' + dd(tong30) + "</b><span>Trung bình " + dd(tb30) + " / ngày</span></div>" + bieuDo(ba) + "</div>" +
     '<div class="the"><h2>Giờ bán đông khách <small>7 ngày gần nhất</small></h2>' + (gio[gDinh] ? '<div class="mo nho" style="margin:-8px 0 4px">Đông nhất khoảng <b style="color:var(--chu)">' + gDinh + ":00 – " + (+gDinh + 1) + ":00</b></div>" : "") + '<div class="gio-bd">' + Object.keys(gio).map(function (k) { return '<div title="' + k + ":00 · " + dd(gio[k]) + '"><i class="' + (k === gDinh && gio[k] ? "dinh" : "") + '" style="height:' + Math.max(2, gio[k] / gmx * 100) + '%"></i><small>' + k + "</small></div>"; }).join("") + "</div></div>" +
-    '<div class="the"><h2>Hoá đơn gần đây<span class="mo-nho" data-tab="hd">Tất cả ›</span></h2>' + (gan.length ? '<div class="cuon"><table class="bang hd-gan"><thead><tr><th>Số HĐ</th><th>Giờ</th><th>Khách</th><th class="an-dt">Người bán</th><th class="r">Tổng</th></tr></thead><tbody>' + gan.map(function (x) { return '<tr class="bam" data-xem-hd="' + esc(x.so) + '"' + (x.tt === "huy" ? ' style="opacity:.5;text-decoration:line-through"' : "") + "><td><b>" + esc(x.so) + '</b></td><td class="mo">' + esc(x.luc.slice(11, 16)) + " " + esc(ngayVN(x.luc).slice(0, 5)) + "</td><td>" + esc(x.khach || "Khách lẻ") + '</td><td class="an-dt mo">' + esc(x.nb) + '</td><td class="r so"><b class="' + (x.phai < 0 ? "cam-chu" : "") + '">' + so(x.phai) + "</b></td></tr>"; }).join("") + "</tbody></table></div>" : '<div class="trong">Chưa có hoá đơn nào</div>') + "</div>" +
+    '<div class="the"><h2>Hoá đơn gần đây<span class="mo-nho" data-tab="hd">Tất cả ›</span></h2>' + (gan.length ? '<div class="cuon"><table class="bang hd-gan"><thead><tr><th>Số HĐ</th><th>Giờ</th><th>Khách</th><th class="an-dt">Người bán</th><th class="r">Tổng</th></tr></thead><tbody>' + gan.map(function (x) { return '<tr class="bam" data-xem-hd="' + esc(x.so) + '"' + (x.tt === "huy" ? ' style="opacity:.5;text-decoration:line-through"' : "") + "><td><b>" + esc(x.so) + '</b><span class="gio-dt">' + esc(x.luc.slice(11, 16)) + " · " + esc(ngayVN(x.luc).slice(0, 5)) + '</span></td><td class="mo">' + esc(x.luc.slice(11, 16)) + " " + esc(ngayVN(x.luc).slice(0, 5)) + "</td><td>" + esc(x.khach || "Khách lẻ") + '</td><td class="an-dt mo">' + esc(x.nb) + '</td><td class="r so"><b class="' + (x.phai < 0 ? "cam-chu" : "") + '">' + so(x.phai) + "</b></td></tr>"; }).join("") + "</tbody></table></div>" : '<div class="trong">Chưa có hoá đơn nào</div>') + "</div>" +
     '</div><div>' +
     '<div class="the"><h2>Ca bán' + (c ? ' <span class="tag c-xanh">Đang mở</span>' : ' <span class="tag c-xam">Chưa mở</span>') + '<span class="phai"><button class="btn nho" data-ca="1">' + (c ? "Chốt ca" : "Mở ca") + "</button></span></h2>" +
       (c ? '<div class="hang-tong"><span class="mo">Mở lúc</span><b>' + esc(c.mo.slice(11, 16)) + " · " + esc(c.nm) + '</b></div><div class="hang-tong"><span class="mo">Tiền đầu ca</span><b class="so">' + dd(c.dau) + '</b></div><div class="hang-tong"><span class="mo">Tiền mặt bán (' + c.n + ' HĐ)</span><b class="so">' + dd(c.tm) + '</b></div><div class="hang-tong"><span class="mo">Thu / chi khác</span><b class="so">+' + so(c.thu) + " / −" + so(c.chi) + '</b></div><div class="hang-tong lon"><span>Két phải có</span><b class="so xanh-chu">' + dd(c.dk) + "</b></div>"
@@ -946,7 +958,40 @@ function veHD() {
     '<div class="kpi">' + kpi("hd", "duong", "Số hoá đơn", okHD.length) + kpi("tien", "xanh", "Doanh thu", dd(cong(ok, "phai"))) + (laChu() ? kpi("lai", "tim", "Lãi gộp", dd(cong(ok, "lai"))) : "") + kpi("canh", "do", "Đã huỷ", ds.length - ok.length) + "</div>" +
     '<div class="the"><div class="timbox">' + IC.tim + '<input id="hd-tim" placeholder="Tìm số hoá đơn, tên khách, SĐT, người bán…" value="' + esc(HD_TIM) + '"></div><div class="cuon"><table class="bang"><thead><tr><th>Số HĐ</th><th>Giờ</th><th>Khách</th><th class="an-dt">Người bán</th><th>Thanh toán</th><th class="r">Tổng</th></tr></thead><tbody>' +
     (ds.slice(0, 300).map(function (x) { var c = CACH[x.cach] || ["", ""];
-      return '<tr class="bam" data-xem-hd="' + esc(x.so) + '"' + (x.tt === "huy" ? ' style="opacity:.5;text-decoration:line-through"' : "") + "><td><b>" + esc(x.so) + '</b></td><td class="mo">' + esc(x.luc.slice(11, 16)) + " " + esc(ngayVN(x.luc).slice(0, 5)) + "</td><td>" + esc(x.khach || "Khách lẻ") + '</td><td class="an-dt mo">' + esc(x.nb) + '</td><td>' + (x.so.indexOf("TH") === 0 ? '<span class="tag c-cam">Trả hàng</span>' : '<span class="tag ' + c[1] + '">' + c[0] + "</span>") + '</td><td class="r so"><b>' + so(x.phai) + "</b></td></tr>"; }).join("") || '<tr><td colspan=6 class="trong">Chưa có hoá đơn</td></tr>') + "</tbody></table></div></div>";
+      return '<tr class="bam" data-xem-hd="' + esc(x.so) + '"' + (x.tt === "huy" ? ' style="opacity:.5;text-decoration:line-through"' : "") + "><td><b>" + esc(x.so) + '</b><span class="gio-dt">' + esc(x.luc.slice(11, 16)) + " · " + esc(ngayVN(x.luc).slice(0, 5)) + '</span></td><td class="mo">' + esc(x.luc.slice(11, 16)) + " " + esc(ngayVN(x.luc).slice(0, 5)) + "</td><td>" + esc(x.khach || "Khách lẻ") + '</td><td class="an-dt mo">' + esc(x.nb) + '</td><td>' + (x.so.indexOf("TH") === 0 ? '<span class="tag c-cam">Trả hàng</span>' : '<span class="tag ' + c[1] + '">' + c[0] + "</span>") + '</td><td class="r so"><b>' + so(x.phai) + "</b></td></tr>"; }).join("") || '<tr><td colspan=6 class="trong">Chưa có hoá đơn</td></tr>') + "</tbody></table></div></div>";
+}
+// vẽ hoá đơn thành ảnh để gửi khách
+function anhHD(soHD) {
+  var h = S.hd.find(function (x) { return x.so === soHD; }); if (!h) return; var c = S.cd;
+  var W = 720, P = 44, F = "-apple-system,'Segoe UI',Roboto,Arial,sans-serif", cv = document.createElement("canvas"), g = cv.getContext("2d");
+  var dong = []; // [kiểu, trái, phải]
+  h.d.forEach(function (x) { dong.push(["ten", x.ten]); dong.push(["sl", soVN(x.sl) + " × " + so(x.gia), so(Math.round(x.sl * x.gia))]); });
+  var tong = [["Tiền hàng", so(h.tien)]]; if (h.giam) tong.push(["Giảm", "−" + so(h.giam)]);
+  var cuoi = []; if (h.cach === "tm" && h.dua) { cuoi.push(["Khách đưa", so(h.dua)]); cuoi.push(["Thối lại", so(Math.max(0, h.dua - h.phai))]); }
+  cuoi.push(["Thanh toán", {tm: "Tiền mặt", ck: "Chuyển khoản", no: "Ghi nợ"}[h.cach] || ""]);
+  var H = 330 + dong.length * 40 + tong.length * 40 + 90 + cuoi.length * 38 + 120; cv.width = W; cv.height = H;
+  g.fillStyle = "#f3f6f4"; g.fillRect(0, 0, W, H); g.fillStyle = "#fff"; g.beginPath(); if (g.roundRect) g.roundRect(20, 20, W - 40, H - 40, 28); else g.rect(20, 20, W - 40, H - 40); g.fill();
+  var gr = g.createLinearGradient(0, 20, 0, 170); gr.addColorStop(0, "#059669"); gr.addColorStop(1, "#047857"); g.fillStyle = gr; g.beginPath(); if (g.roundRect) g.roundRect(20, 20, W - 40, 150, [28, 28, 0, 0]); else g.rect(20, 20, W - 40, 150); g.fill();
+  var t = function (txt, x, y, sz, mau, dam, canh) { g.font = (dam ? "700 " : "500 ") + sz + "px " + F; g.fillStyle = mau; g.textAlign = canh || "left"; g.fillText(txt, x, y); };
+  var cat = function (txt, rong, sz, dam) { g.font = (dam ? "700 " : "500 ") + sz + "px " + F; if (g.measureText(txt).width <= rong) return txt; while (txt.length > 1 && g.measureText(txt + "…").width > rong) txt = txt.slice(0, -1); return txt + "…"; };
+  t(cat(c.tenTiem, W - 2 * P, 34, 1), W / 2, 82, 34, "#fff", 1, "center");
+  t(cat([c.diaChi, c.sdt ? "ĐT " + c.sdt : ""].filter(Boolean).join(" · ") || "Cảm ơn quý khách", W - 2 * P, 20), W / 2, 118, 20, "#d1fae5", 0, "center");
+  t("HOÁ ĐƠN BÁN HÀNG", W / 2, 150, 17, "#a7f3d0", 1, "center");
+  var y = 215; t(h.so, P, y, 22, "#0f1f17", 1); t(h.luc.slice(11, 16) + " · " + ngayVN(h.luc), W - P, y, 20, "#6b7a72", 0, "right");
+  y += 34; t("Khách: " + (h.khach || "Khách lẻ") + (h.nb ? "   ·   Thu ngân: " + h.nb : ""), P, y, 19, "#6b7a72");
+  y += 26; g.strokeStyle = "#e3ebe6"; g.setLineDash([8, 7]); g.lineWidth = 2; g.beginPath(); g.moveTo(P, y); g.lineTo(W - P, y); g.stroke(); y += 40;
+  dong.forEach(function (d) { if (d[0] === "ten") t(cat(d[1], W - 2 * P, 22, 1), P, y, 22, "#0f1f17", 1); else { t(d[1], P, y, 20, "#6b7a72"); t(d[2], W - P, y, 22, "#0f1f17", 1, "right"); } y += 40; });
+  g.beginPath(); g.moveTo(P, y - 14); g.lineTo(W - P, y - 14); g.stroke(); y += 24;
+  tong.forEach(function (d) { t(d[0], P, y, 21, "#6b7a72"); t(d[1], W - P, y, 21, "#0f1f17", 0, "right"); y += 40; });
+  g.setLineDash([]); g.fillStyle = "#ecfdf5"; g.beginPath(); if (g.roundRect) g.roundRect(P - 14, y - 34, W - 2 * P + 28, 70, 16); else g.rect(P - 14, y - 34, W - 2 * P + 28, 70); g.fill();
+  t("TỔNG CỘNG", P, y + 10, 22, "#047857", 1); t(so(h.phai) + "đ", W - P, y + 12, 34, "#047857", 1, "right"); y += 86;
+  cuoi.forEach(function (d) { t(d[0], P, y, 19, "#6b7a72"); t(d[1], W - P, y, 19, "#0f1f17", 0, "right"); y += 38; });
+  y += 18; t(c.loiCam || "Cảm ơn quý khách, hẹn gặp lại!", W / 2, y, 21, "#059669", 1, "center");
+  cv.toBlob(function (bl) {
+    var ten = "hoa-don-" + h.so + ".png", tep = null; try { tep = new File([bl], ten, {type: "image/png"}); } catch (e) {}
+    if (tep && navigator.canShare && navigator.canShare({files: [tep]})) { navigator.share({files: [tep], title: "Hoá đơn " + h.so}).catch(function () {}); return; }
+    var a = document.createElement("a"); a.href = URL.createObjectURL(bl); a.download = ten; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500); bao("Đã lưu ảnh hoá đơn — gửi qua Zalo như ảnh bình thường");
+  }, "image/png");
 }
 function xemHD(soHD) {
   var h = S.hd.find(function (x) { return x.so === soHD; }); if (!h) return; var c = CACH[h.cach] || ["", ""];
@@ -954,7 +999,7 @@ function xemHD(soHD) {
     '<div class="mo nho" style="margin:-10px 0 12px">' + esc(h.luc.slice(11, 16)) + " · " + ngayVN(h.luc) + " · " + esc(h.khach || "Khách lẻ") + (h.sdt ? " · " + esc(h.sdt) : "") + (h.nb ? " · bán bởi " + esc(h.nb) : "") + ' · <span class="tag ' + c[1] + '">' + c[0] + "</span></div>" +
     '<table class="bang"><thead><tr><th>Hàng</th><th class="r">SL</th><th class="r">Giá</th><th class="r">Tiền</th></tr></thead><tbody>' + h.d.map(function (x) { return "<tr><td>" + esc(x.ten) + '</td><td class="r">' + soVN(x.sl) + '</td><td class="r so">' + so(x.gia) + '</td><td class="r so">' + so(Math.round(x.sl * x.gia)) + "</td></tr>"; }).join("") + "</tbody></table>" +
     '<div style="margin-top:10px"><div class="hang-tong"><span class="mo">Tiền hàng</span><span class="so">' + dd(h.tien) + "</span></div>" + (h.giam ? '<div class="hang-tong"><span class="mo">Giảm</span><span class="so">−' + dd(h.giam) + "</span></div>" : "") + '<div class="hang-tong lon"><span>Tổng</span><b class="so">' + dd(h.phai) + "</b></div>" + (laChu() ? '<div class="hang-tong nho"><span class="mo">Giá vốn · Lãi gộp</span><span class="so mo">' + dd(h.von) + " · " + dd(h.lai) + "</span></div>" : "") + (h.gc ? '<p class="mo nho">' + esc(h.gc) + "</p>" : "") + "</div>" +
-    '<div class="hai" style="margin-top:16px"><button class="btn lon" data-in="' + esc(h.so) + '">' + IC.in + "In lại</button>" + (h.tt !== "huy" && laChu() ? '<button class="btn do lon" data-huy="' + esc(h.so) + '">Huỷ ' + (h.so.indexOf("TH") === 0 ? "phiếu trả" : "hoá đơn") + "</button>" : "<span></span>") + "</div>" +
+    '<button class="btn chinh lon" style="margin-top:16px" data-anh-hd="' + esc(h.so) + '">📤 Gửi ảnh hoá đơn (Zalo, Messenger…)</button><div class="hai" style="margin-top:10px"><button class="btn lon" data-in="' + esc(h.so) + '">' + IC.in + "In lại</button>" + (h.tt !== "huy" && laChu() ? '<button class="btn do lon" data-huy="' + esc(h.so) + '">Huỷ ' + (h.so.indexOf("TH") === 0 ? "phiếu trả" : "hoá đơn") + "</button>" : "<span></span>") + "</div>" +
     (h.tt !== "huy" && laChu() && h.so.indexOf("HD") === 0 ? '<button class="btn lon" style="margin-top:10px" data-tra="' + esc(h.so) + '">↩ Khách trả lại hàng</button>' : "") +
     (h.traTu ? '<p class="mo nho" style="margin-top:10px">Phiếu trả hàng của hoá đơn <b class="lien" data-xem-hd="' + esc(h.traTu) + '">' + esc(h.traTu) + "</b></p>" : "") +
     (traCua(h.so).length ? '<p class="mo nho" style="margin-top:10px">Đã trả hàng: ' + traCua(h.so).map(function (x) { return '<b class="lien" data-xem-hd="' + esc(x.so) + '">' + esc(x.so) + "</b> (" + dd(x.phai) + ")"; }).join(", ") + "</p>" : ""));
@@ -1277,7 +1322,8 @@ document.addEventListener("click", function (e) {
     if (!tn) { lo.textContent = "Nhập tên"; return; } if (!/^\d{4,6}$/.test(p1)) { lo.textContent = "Mã PIN là 4–6 chữ số"; return; } if (p1 !== p2) { lo.textContent = "Hai lần nhập mã PIN không khớp"; return; }
     t.disabled = true; DN = {}; goi("luuNV", {ten: tn, pin: p1, vai: "chu"}).then(function (o) { nhan(o); napAnh(); bao("Đã tạo tài khoản chủ tiệm ✓"); }).catch(function (e2) { t.disabled = false; lo.textContent = (e2 && e2.message) || String(e2); }); return; }
   if (t.closest("[data-dong]") && !t.closest("[data-in]")) { dongHop(); return; }
-  if ((b = t.closest("[data-tab]"))) { TRANG = b.dataset.tab; XEM_GIO = false; ve(); window.scrollTo(0, 0); return; }
+  if (t.closest("[data-menu-them]")) { hop("Thêm", '<div class="menu-them">' + [["kh", "Khách hàng", "Nợ, điểm tích luỹ"], ["so", "Sổ sách", "Thu chi, báo cáo, nhật ký"], ["cd", "Cài đặt", "Tiệm, nhân viên, in, sao lưu"]].map(function (x) { return '<button data-tab="' + x[0] + '"' + (TRANG === x[0] ? ' class="on"' : "") + ">" + IC[x[0]] + x[1] + "<small>" + x[2] + "</small></button>"; }).join("") + '<button class="do" data-doi-nguoi="1">' + IC.khoa + "Đăng xuất<small>" + esc(S.u.ten) + " · " + (laChu() ? "Chủ tiệm" : "Nhân viên") + "</small></button></div>"); return; }
+  if ((b = t.closest("[data-tab]"))) { if (b.closest("#hop")) dongHop(); TRANG = b.dataset.tab; XEM_GIO = false; ve(); window.scrollTo(0, 0); return; }
   if ((b = t.closest("[data-tqky]"))) { TQ_KY = b.dataset.tqky; ve(); return; }
   if ((b = t.closest("[data-htab]"))) { HANG_TAB = b.dataset.htab; ve(); return; }
   if ((b = t.closest("[data-di]"))) { var p = b.dataset.di.split("|"); if (p[0] === "ncc") { TRANG = "hang"; HANG_TAB = "ncc"; ve(); window.scrollTo(0, 0); return; } HANG_TAB = "hang"; TRANG = p[0]; if (p[0] === "hang") KHO_LOC = p[1]; if (p[0] === "kh") KH_LOC = p[1]; if (p[0] === "hd") HD_LOC = p[1]; ve(); window.scrollTo(0, 0); return; }
@@ -1313,6 +1359,7 @@ document.addEventListener("click", function (e) {
     t.disabled = true; goi("traHang", {so: t.dataset.so, dong: dsT, lyDo: $("tra-ly").value}).then(function (o) { dongHop(); nhan(o); bao("Đã trả hàng · " + o.vua); xemHD(o.vua); }).catch(function (e2) { t.disabled = false; loiBao(e2); }); return; }
   if ((b = t.closest("[data-xoa-no]"))) { var qn = b.dataset.xoaNo.split("|"); if (!confirm("Xoá dòng " + (qn[3] === "tra" ? "trả nợ" : "nợ") + " " + dd(qn[2]) + " của " + qn[1] + "?" + (qn[3] === "tra" ? "\nKhoản thu đi kèm trong Sổ sách cũng bị xoá." : ""))) return; sau(b, goi("xoaNo", qn[0], qn[1], +qn[2]), "Đã xoá dòng nợ").then(function () { formKH(qn[1]); }); return; }
   if ((b = t.closest("[data-hdloc]"))) { HD_LOC = b.dataset.hdloc; ve(); return; }
+  if ((b = t.closest("[data-anh-hd]"))) { anhHD(b.dataset.anhHd); return; }
   if ((b = t.closest("[data-xem-hd]"))) { xemHD(b.dataset.xemHd); return; }
   if ((b = t.closest("[data-huy]"))) { var soH = b.dataset.huy, ly = prompt("Huỷ hoá đơn " + soH + "? Hàng sẽ được cộng lại vào kho.\nLý do:"); if (ly === null) return; sau(b, goi("huyHD", soH, ly), "Đã huỷ " + soH); return; }
   if ((b = t.closest("[data-hang-moi]"))) { var v2 = b.dataset.hangMoi || "", laMv = /^\d{6,}$/.test(v2); formHang("", laMv ? v2 : "", laMv ? "" : v2); return; }
