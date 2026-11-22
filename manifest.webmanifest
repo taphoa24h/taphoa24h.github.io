@@ -1,6 +1,6 @@
 {
-  "name": "Tiệm Tạp Hoá",
-  "short_name": "Tạp Hoá",
+  "name": "Quản Lý",
+  "short_name": "Quản Lý",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
