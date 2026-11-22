@@ -1601,7 +1601,7 @@ function xemPN(soP) {
   var p = S.pn.find(function (x) { return x.so === soP; }); if (!p) return;
   hop("Phiếu " + esc(p.so), '<div class="mo nho" style="margin:-10px 0 12px">' + ngayVN(p.ngay) + (p.ncc ? " · " + esc(p.ncc) : "") + '</div><table class="bang"><thead><tr><th>Hàng</th><th class="r">SL</th><th class="r">Giá</th><th>HSD</th><th class="r">Tiền</th></tr></thead><tbody>' +
     p.d.map(function (x) { return "<tr><td>" + esc(x.ten) + '</td><td class="r">' + soVN(x.sl) + '</td><td class="r so">' + so(x.gn) + '</td><td class="mo">' + (x.hsd ? ngayVN(x.hsd) : "") + '</td><td class="r so">' + so(Math.round(x.sl * x.gn)) + "</td></tr>"; }).join("") + '</tbody></table><div class="hang-tong lon"><span>Tổng</span><b class="so">' + dd(p.tien) + "</b></div>" +
-    '<button class="btn do lon" style="margin-top:12px" data-xoa-pn="' + esc(p.so) + '">Xoá phiếu này (tồn kho trừ lại)</button><p class="mo nho">Xoá phiếu không tự sửa lại giá vốn và không xoá khoản tiền đã ghi.</p>');
+    '<button class="btn do lon" style="margin-top:12px" data-xoa-pn="' + esc(p.so) + '">🗑 Xoá phiếu nhập nhầm</button><p class="mo nho">Xoá phiếu: tồn kho trừ lại, xoá khoản tiền đã trả và nợ nhà cung cấp của phiếu, giá vốn tính lại theo các lần nhập còn lại.</p>');
 }
 
 // ===== NHÀ CUNG CẤP =====
@@ -1889,13 +1889,13 @@ document.addEventListener("click", function (e) {
   if (t.closest("[data-nhap]")) { NH = null; formNhap(); return; }
   if (t.closest("[data-nhap-goi-y]")) { NH = {ncc: "", gc: "", cach: "du", daTra: "", dong: goiYNhap().map(function (x) { return {ma: x.h.ma, sl: x.can, gn: x.h.gn, hsd: ""}; })}; formNhap(); return; }
   if ((b = t.closest("[data-nxoa]"))) { nhoNhap(); NH.dong.splice(+b.dataset.nxoa, 1); formNhap(); return; }
-  if (t.id === "n-luu") { nhoNhap(); var ds2 = NH.dong.filter(function (x) { return x.ma && +x.sl > 0; }).map(function (x) { var h = hang(x.ma), q = x.lon && h.qd > 1 ? h.qd : 1; return {ma: x.ma, sl: Math.round((+x.sl) * q * 1000) / 1000, gn: Math.round((+x.gn || 0) / q), hsd: isoTu(x.hsd), gb: x.gb === undefined || x.gb === "" ? undefined : Math.round(+x.gb)}; }); if (!ds2.length) { alert("Thêm hàng và số lượng"); return; } sau(t, goi("nhapHang", {ncc: NH.ncc, gc: NH.gc, dong: ds2, daTra: NH.cach === "du" ? 1e15 : NH.cach === "no" ? 0 : +NH.daTra || 0}), "Đã nhập hàng ✓"); return; }
+  if (t.id === "n-luu") { nhoNhap(); var ds2 = NH.dong.filter(function (x) { return x.ma && +x.sl > 0; }).map(function (x) { var h = hang(x.ma), q = x.lon && h.qd > 1 ? h.qd : 1; return {ma: x.ma, sl: Math.round((+x.sl) * q * 1000) / 1000, gn: Math.round((+x.gn || 0) / q), hsd: isoTu(x.hsd), gb: x.gb === undefined || x.gb === "" ? undefined : Math.round(+x.gb)}; }); if (!ds2.length) { alert("Thêm hàng và số lượng"); return; } sau(t, goi("nhapHang", {ncc: NH.ncc, gc: NH.gc, dong: ds2, daTra: NH.cach === "du" ? 1e15 : NH.cach === "no" ? 0 : +NH.daTra || 0}), "").then(function (o) { if (o && o.vua) { var sv = o.vua; thanhNut("✓ Đã nhập hàng · " + sv, "Nhập nhầm? Xoá", function () { if (!confirm("Xoá phiếu " + sv + "?\nTồn kho trừ lại, xoá tiền đã trả và nợ nhà cung cấp của phiếu, giá vốn tính lại.")) return; goi("xoaPhieuNhap", sv).then(function (o2) { nhan(o2); bao("Đã xoá phiếu " + sv); }).catch(loiBao); }); } else if (o) bao("Đã nhập hàng ✓"); }); return; }
   if (t.closest("[data-kiem]")) { formKiem(); return; }
   if (t.id === "k-luu") { var ds3 = []; document.querySelectorAll("[data-kiem-ma]").forEach(function (x) { if (x.value !== "") ds3.push({ma: x.dataset.kiemMa, dem: +x.value}); }); if (!ds3.length) { alert("Chưa điền số đếm"); return; } sau(t, goi("kiemKho", ds3), "Đã cập nhật tồn kho ✓"); return; }
   if (t.closest("[data-tem]")) { formTem(); return; }
   if (t.id === "tem-in") { inTem(); return; }
   if ((b = t.closest("[data-xem-pn]"))) { xemPN(b.dataset.xemPn); return; }
-  if ((b = t.closest("[data-xoa-pn]"))) { var sp = b.dataset.xoaPn; if (!confirm("Xoá phiếu " + sp + "?")) return; sau(b, goi("xoaPhieuNhap", sp), "Đã xoá " + sp); return; }
+  if ((b = t.closest("[data-xoa-pn]"))) { var sp = b.dataset.xoaPn; if (!confirm("Xoá phiếu " + sp + "?\nTồn kho trừ lại, xoá tiền đã trả và nợ nhà cung cấp của phiếu, giá vốn tính lại.")) return; sau(b, goi("xoaPhieuNhap", sp), "Đã xoá " + sp); return; }
   if (t.closest("[data-ncc-moi]")) { formNCC(""); return; }
   if ((b = t.closest("[data-ncc]"))) { formNCC(b.dataset.ncc); return; }
   if (t.closest("[data-ncc-no]")) { formTraNCC(); return; }
