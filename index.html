@@ -855,7 +855,7 @@ var CH = (function () {
 })();
 </script>
 <script>
-var PHIEN = "v3.8.0";   // số phiên bản hiện trong menu tài khoản
+var PHIEN = "v3.8.1";   // số phiên bản hiện trong menu tài khoản
 var THAT = true;
 var S = null, ANH = {}, TRANG = "", TIM = "", NHOM = "Tất cả", HD_LOC = "nay", HD_TIM = "", KHO_LOC = "tat", KHO_TIM = "", KH_LOC = "tat", KH_TIM = "", BC = "thang", TT = null, NH = null, XEM_GIO = false, PIN_GO = "";
 var $ = function (i) { return document.getElementById(i); };
@@ -2064,10 +2064,9 @@ function veKD() {
 }
 function kdVe() { var o = $("kd-ds"); if (o) o.innerHTML = veKD(); }
 function kdVeQuet() { var v = $("kd-o"); if (v) v.innerHTML = ""; var o = $("kd-tim"); if (o) { o.value = ""; o.focus(); } }
-function kdGui(muc, fn, arg) {   // gửi máy chủ lần lượt ở nền, người dùng không phải chờ
-  muc.tt = "cho"; KD.ds.push(muc); KD.dang++; kdVe();
-  KD.cho = KD.cho.then(function () { return goi(fn, arg); }).then(function (o) { muc.tt = "ok"; nhan(o); })
-    .catch(function (e) { muc.tt = "loi"; muc.ct += " · " + ((e && e.message) || e); }).then(function () { KD.dang--; kdVe(); });
+function kdGui(muc, lam, apDung) {   // số liệu đổi NGAY trên máy (bán/quét lại được liền), máy chủ lưu ngầm phía sau
+  muc.tt = "cho"; KD.ds.push(muc); KD.dang++; try { if (apDung) apDung(); } catch (e) {} BC_S = null; kdVe();
+  ghiNen(muc.ten, lam, function () { muc.tt = "ok"; KD.dang--; kdVe(); }, function (m) { muc.tt = "loi"; muc.ct += " · " + m; KD.dang--; kdVe(); });
 }
 function kdQuet(t) {
   t = String(t || "").trim(); var o = $("kd-tim"); if (o) o.value = ""; if (!t || !KD) return;
@@ -2323,14 +2322,14 @@ function veNen() {
   var o = $("nen-bao"); if (!o) { o = document.createElement("div"); o.id = "nen-bao"; document.body.appendChild(o); }
   o.innerHTML = NEN.dem ? '<i></i>Đang lưu ' + (NEN.dem > 1 ? NEN.dem + " việc" : "") + "…" : ""; o.className = NEN.dem ? "hien" : "";
 }
-function ghiNen(ten, lam, sauXong) {
+function ghiNen(ten, lam, sauXong, khiLoi) {
   NEN.dem++; veNen();
   NEN.cho = NEN.cho.then(function () { return lam(); }).then(function (o) {
     NEN.dem--; veNen();
     if (o && Array.isArray(o.hang) && !NEN.dem) { var a = document.activeElement; S = o; if ($("hop").hidden && !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) ve(); }
     if (sauXong) { try { sauXong(o); } catch (e) {} }
   }, function (e) {
-    NEN.dem--; veNen(); var m = String((e && e.message) || e);
+    NEN.dem--; veNen(); var m = String((e && e.message) || e); if (khiLoi) { try { khiLoi(m); } catch (e2) {} }
     if (m.indexOf("CAN_PIN") >= 0) { dangXuat(); return; }
     alert("⚠ CHƯA LƯU ĐƯỢC: " + ten + "\n" + m + (laLoiMang(e) ? "\n\nMất mạng — có mạng lại thì làm lại việc này." : "") + "\n\nApp tải lại số liệu đúng từ máy chủ.");
     goi("tai").then(function (o) { if (!NEN.dem) { S = o; ve(); } }).catch(function () { var sn = lsDoc("th_snap", null); if (sn && !NEN.dem) { S = phuCho(sn); ve(); } });
@@ -2476,10 +2475,11 @@ document.addEventListener("click", function (e) {
   if (t.closest("[data-kiem]")) { formKiem(); return; }
   if (t.closest("[data-kkd]")) { formKKD(); return; }
   if ((b = t.closest("[data-kd-luu]"))) { var hk = hang(b.dataset.kdLuu), vk = $("kd-sl").value; if (vk === "") { $("kd-sl").focus(); return; } var dk = Math.round(+vk * (+b.dataset.qd || 1) * 1000) / 1000, ctk = "Đếm " + soVN(dk) + " " + (hk.dv || "") + " (app ghi " + soVN(hk.ton) + ")";
-    if (dk === hk.ton) { KD.ds.push({ten: hk.ten, ct: ctk + " · khớp", tt: "ok"}); kdVe(); } else kdGui({ten: hk.ten, ct: ctk}, "kiemKho", [{ma: hk.ma, dem: dk}]); kdVeQuet(); return; }
+    if (dk === hk.ton) { KD.ds.push({ten: hk.ten, ct: ctk + " · khớp", tt: "ok"}); kdVe(); } else kdGui({ten: hk.ten, ct: ctk}, function () { return goi("kiemKho", [{ma: hk.ma, dem: dk}]); }, function () { hk.ton = dk; }); kdVeQuet(); return; }
   if ((b = t.closest("[data-kd-moi]"))) { var tn = $("kd-ten").value.trim(), gbn = Math.round(+$("kd-gb").value || 0), sln = +$("kd-sl").value || 0;
     if (!tn) { $("kd-ten").focus(); bao("Gõ tên hàng"); return; } if (!(gbn > 0)) { $("kd-gb").focus(); bao("Gõ giá bán"); return; }
-    kdGui({ten: tn, mv: b.dataset.kdMoi, ct: "Món mới · " + soVN(sln) + " · bán " + so(gbn) + "đ"}, "hangLuu", {moi: true, ten: tn, gb: gbn, gn: Math.round(+$("kd-gn").value || 0), dv: $("kd-dv").value.trim(), mv: b.dataset.kdMoi, ton0: sln, nhom: "", min: "", dvl: "", qd: "", mvl: "", ngung: false}); kdVeQuet(); return; }
+    var maK = maMoi(), gK2 = {ma: maK, moi: true, tuSinh: true, ten: tn, gb: gbn, gn: Math.round(+$("kd-gn").value || 0), dv: $("kd-dv").value.trim(), mv: b.dataset.kdMoi, ton0: sln, nhom: "", min: "", dvl: "", qd: "", mvl: "", ngung: false};
+    kdGui({ten: tn, mv: b.dataset.kdMoi, ct: "Món mới · " + soVN(sln) + " · bán " + so(gbn) + "đ"}, function () { return goi("hangLuu", gK2).then(function (o) { if (o.vuaMa && o.vuaMa !== maK) doiMa(maK, o.vuaMa); return o; }); }, function () { apHang(gK2, maK, true); }); kdVeQuet(); return; }
   if (t.id === "k-luu") { var ds3 = []; document.querySelectorAll("[data-kiem-ma]").forEach(function (x) { if (x.value !== "") ds3.push({ma: x.dataset.kiemMa, dem: +x.value}); }); if (!ds3.length) { alert("Chưa điền số đếm"); return; }
     var lech3 = ds3.filter(function (x) { return so3(x.dem) !== so3(hang(x.ma).ton); }); if (!lech3.length) { dongHop(); bao("Số đếm khớp hết, không có chênh lệch ✓"); return; }
     sauNen("Kiểm kho", "kiemKho", lech3, function () { lech3.forEach(function (x) { hang(x.ma).ton = so3(x.dem); }); }, "Đã cập nhật tồn kho ✓"); return; }
