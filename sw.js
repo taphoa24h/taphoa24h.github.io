@@ -1,10 +1,19 @@
-const BAN = "tth-v3.3.0";
+const BAN = "tth-v3.4.0";
 const VO = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
-self.addEventListener("install", e => { e.waitUntil(caches.open(BAN).then(c => c.addAll(VO)).then(() => self.skipWaiting())); });
-self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== BAN).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
+const NGOAI = "tth-ngoai", HOST = ["cdn.jsdelivr.net", "fastly.jsdelivr.net", "fonts.googleapis.com", "fonts.gstatic.com", "cdnjs.cloudflare.com"];
+self.addEventListener("install", e => { e.waitUntil(caches.open(BAN).then(c => c.addAll(VO.map(u => new Request(u, {cache: "reload"})))).then(() => self.skipWaiting())); });
+self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== BAN && k !== NGOAI).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", e => {
+  if (e.request.method !== "GET") return;                                            // API Google (POST): luôn đi mạng
   const u = new URL(e.request.url);
-  if (e.request.method !== "GET" || u.origin !== location.origin) return;          // API Google: luôn đi mạng
-  e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(BAN).then(x => x.put(e.request, c)); return r; })
-    .catch(() => caches.match(e.request).then(r => r || caches.match("index.html"))));
+  if (u.origin === location.origin) {   // giao diện + tiếng đọc: mở ngay từ máy, tải bản mới ngầm cho lần sau
+    e.respondWith(caches.open(BAN).then(c => c.match(e.request, {ignoreSearch: true}).then(r => {
+      const moi = fetch(e.request).then(x => { if (x.ok) c.put(e.request, x.clone()); return x; });
+      if (r) { e.waitUntil(moi.catch(() => {})); return r; }
+      return moi.catch(() => c.match("index.html"));
+    })));
+    return;
+  }
+  if (HOST.indexOf(u.hostname) >= 0)   // bộ quét mã vạch, phông chữ: lưu hẳn trên máy, lần sau mở camera không phải tải lại
+    e.respondWith(caches.open(NGOAI).then(c => c.match(e.request).then(r => r || fetch(e.request).then(x => { if (x.ok || x.type === "opaque") c.put(e.request, x.clone()); return x; }))));
 });
