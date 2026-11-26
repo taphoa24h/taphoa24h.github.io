@@ -717,6 +717,19 @@ body.man-khach{background:#03100a!important;color:#ecfdf5;margin:0;overflow:hidd
 @keyframes mkNay{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}@keyframes mkVe{to{stroke-dashoffset:0}}
 .mk-da{font-size:3.4em;font-weight:800;letter-spacing:-.03em;margin:.15em 0;color:#ecfdf5}
 .mk-the{display:inline-flex;gap:2em;margin-top:.6em;padding:.7em 1.4em;border-radius:1em;background:rgba(255,255,255,.05);border:1px solid var(--mk-vien)}.mk-the span{display:block;color:var(--mk-mo);font-size:.75em}.mk-the b{font-size:1.5em;color:var(--mk-x2)}
+.mk-qc{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:2.4em;align-items:center;padding:1.5em 3.5em;animation:mkVao .6s ease-out}
+.mk-qc-anh{justify-self:center;width:100%;max-width:60vh;aspect-ratio:1;border-radius:1.5em;overflow:hidden;background:#fff;box-shadow:0 1.5em 4em rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08)}
+.mk-qc-anh img{width:100%;height:100%;object-fit:contain;display:block}
+.mk-qc-anh .chu{width:100%;height:100%;display:grid;place-items:center;font-size:7em;font-weight:800;color:#fff}.mk-qc-anh .chu.km{background:linear-gradient(135deg,#f59e0b,#dc2626);font-size:9em}
+.mk-qc-nhan{display:inline-block;padding:.35em .95em;border-radius:99px;font-size:.78em;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.mk-qc-nhan.km{background:rgba(245,158,11,.18);color:#fcd34d}.mk-qc-nhan.moi{background:rgba(16,185,129,.18);color:#6ee7b7}
+.mk-qc-nd h2{font-size:2.7em;line-height:1.1;margin:.45em 0 .3em;letter-spacing:-.02em;color:#ecfdf5}
+.mk-qc-nd p{font-size:1.2em;color:#c9e3d7;margin:.25em 0}.mk-qc-nd p.mo{color:var(--mk-mo);font-size:.9em;margin-top:.8em}
+.mk-qc-gia{font-size:3.2em;font-weight:800;color:#6ee7b7;margin-top:.25em;letter-spacing:-.03em}.mk-qc-gia s{font-size:.42em;color:var(--mk-mo);font-weight:600;margin-right:.45em;letter-spacing:0}.mk-qc-gia small{font-size:.38em;color:var(--mk-mo);font-weight:600;letter-spacing:0}
+.mk-cham{display:flex;justify-content:center;gap:.45em;padding:0 0 .9em}.mk-cham i{width:.5em;height:.5em;border-radius:99px;background:rgba(255,255,255,.18);transition:width .4s,background .4s}.mk-cham i.on{width:1.8em;background:var(--mk-x)}
+.mk-kh{display:flex;gap:.8em;align-items:center;background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.35);border-radius:1.1em;padding:.7em 1.1em}
+.mk-kh .sao{font-size:1.7em;color:#fbbf24;line-height:1}.mk-kh b{display:block;font-size:1.05em}.mk-kh small{color:#fde68a;font-size:.8em}
+@media(max-aspect-ratio:1/1){.mk-qc{grid-template-columns:1fr;grid-template-rows:auto auto;text-align:center;padding:1em 1.5em;gap:1em;align-content:center}.mk-qc-anh{max-width:38vh}.mk-qc-nd h2{font-size:2em}.mk-qc-gia{font-size:2.4em}.mk-kh{grid-column:1}.mk-tt{grid-row:1/4}}
 body.man-khach[data-mk=mat]:after{content:"Đang kết nối lại…";position:fixed;right:14px;bottom:10px;background:#7f1d1d;color:#fecaca;font-size:13px;padding:5px 12px;border-radius:99px}
 .mk-chon{display:grid;gap:12px}.mk-chon .o{border:1px solid var(--vien);border-radius:14px;padding:14px}.mk-chon .o>b{display:block;font-size:15px;margin-bottom:4px}.mk-chon .o p{margin:0 0 10px}
 .mk-ma{font-size:34px;font-weight:800;letter-spacing:.25em;text-align:center;margin:4px 0}.mk-qrbox{width:190px;margin:4px auto 12px}.mk-qrbox svg{width:100%;height:auto;display:block}
@@ -890,7 +903,7 @@ var CH = (function () {
 })();
 </script>
 <script>
-var PHIEN = "v3.11.0";   // số phiên bản hiện trong menu tài khoản
+var PHIEN = "v3.12.0";   // số phiên bản hiện trong menu tài khoản
 var THAT = true;
 var S = null, ANH = {}, TRANG = "", TIM = "", NHOM = "Tất cả", HD_LOC = "nay", HD_TIM = "", KHO_LOC = "tat", KHO_TIM = "", KH_LOC = "tat", KH_TIM = "", BC = "thang", TT = null, NH = null, XEM_GIO = false, PIN_GO = "";
 var $ = function (i) { return document.getElementById(i); };
@@ -992,6 +1005,22 @@ function p2pNhan(o) {
   } catch (e) {}
 }
 setInterval(function () { if (S && MK.bat) p2pBan(); }, 3000);
+function qcDs() {   // trang trình chiếu lúc chờ: khuyến mãi đang chạy, rồi hàng mới về
+  var ds = [];
+  (S.km || []).filter(kmDangChay).forEach(function (k) { var h = k.ad.indexOf("ma:") === 0 ? hang(k.ad.slice(3)) : null;
+    ds.push({l: "km", t: k.ten, m: moTaKM(k), ma: h ? h.ma : "", ten: h ? h.ten : "", gia: h ? h.gb : 0, giaMoi: h ? (k.loai === "tien" ? h.gb - (+k.gt || 0) : k.loai === "pt" ? Math.round(h.gb * (100 - (+k.gt || 0)) / 100) : 0) : 0, dv: h ? h.dv : "", den: k.den || ""}); });
+  // không chiếu thuốc lá / rượu mạnh (luật cấm quảng cáo)
+  var cam = /thu[oố]c\s*l[aá]|x[iì]\s*g[aà]|r[uư][oợ]u|vodka|whisk|cognac|soju/i;
+  (S.hang || []).filter(function (h) { return !h.ngung && h.ton > 0 && h.gb > 0 && !cam.test(h.ten + " " + (h.nhom || "")); }).slice(-4).reverse()
+    .forEach(function (h) { ds.push({l: "moi", t: h.ten, m: h.nhom || "", ma: h.ma, ten: h.ten, gia: h.gb, dv: h.dv || ""}); });
+  return ds.slice(0, 10);
+}
+function khTT() {   // khách đang thanh toán (đã nhập SĐT): tên + điểm, KHÔNG gửi công nợ sang màn khách
+  if (!TT || !$("tt-sdt")) return null; var sd = ($("tt-sdt").value || "").replace(/\D/g, ""); if (sd.length < 9) return null;
+  var cong = diemBat() ? Math.floor(phaiTT() / S.cd.diem) : 0;
+  if (TT.kh) return {ten: TT.kh.ten, diem: TT.kh.diem || 0, cong: cong, dung: TT.diemDung || 0};
+  return {ten: ($("tt-khach") ? $("tt-khach").value : "").trim(), moi: true, cong: cong};
+}
 var KH_CK = 0;   // >0: đang mở mã QR thu nhanh chuyển khoản (số tiền)
 function phatKhach(xong) {
   if (!S || !S.cd) return; var d = gio(), km = tinhKM(d), c = S.cd, tien = tongDon(d), tt = null;
@@ -1001,9 +1030,12 @@ function phatKhach(xong) {
   if (typeof xong === "number") xong = {tien: xong};
   var g = {ten: c.tenTiem, dc: c.diaChi || "", sdt: c.sdt || "", loi: c.loiCam || "", nh: c.nh || "", stk: c.stk || "", tk: c.tenTK || "",
     d: d.map(function (x) { var h = hang(x.ma) || {}; return {ten: h.ten || x.ma, dv: h.dv || "", sl: x.sl, gia: x.gia}; }),
-    tien: tien, km: km.tong, kmTen: km.ten || "", tt: tt, tong: tong, qr: xong || (tt && tt.cach !== "ck") ? "" : qrUrl(tong), xong: xong || null, luc: Date.now()};
-  try { if (KENH) KENH.postMessage(g); localStorage.setItem("th_khach", JSON.stringify(g)); } catch (e) {}
-  if (MK.bat && MK.ma) { var nT = p2pGui(g); mkDay(g, nT ? 1500 : 120); }
+    tien: tien, km: km.tong, kmTen: km.ten || "", tt: tt, kh: tt ? khTT() : null, tong: tong, qr: xong || (tt && tt.cach !== "ck") ? "" : qrUrl(tong), xong: xong || null, luc: Date.now()};
+  if (!d.length) g.qc = qcDs();
+  // bản có ảnh: cùng máy + nối thẳng; bản gửi qua máy chủ bỏ ảnh cho nhẹ
+  var gA = g.qc ? Object.assign({}, g, {qc: g.qc.map(function (q) { return Object.assign({}, q, {anh: q.ma && ANH[q.ma] ? ANH[q.ma] : ""}); })}) : g;
+  try { if (KENH) KENH.postMessage(gA); localStorage.setItem("th_khach", JSON.stringify(gA)); } catch (e) {}
+  if (MK.bat && MK.ma) { var nT = p2pGui(gA); mkDay(g, nT ? 1500 : 120); }
 }
 function moHopKhach() {
   var link = MK_URL + "#khach=" + MK.ma;
@@ -1022,7 +1054,7 @@ function veQRLink(chu) {
 }
 function moKhach() {
   document.body.className = "man-khach"; document.title = "Màn hình khách";
-  var CU = {}, G = null, XONG_LUC = 0, KHUNG = "", LAST = -1;
+  var CU = {}, G = null, XONG_LUC = 0, KHUNG = "", LAST = -1, QI = 0;
   var thu = function (n) { return ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"][n]; };
   var gioMk = function () { var t = gioVN(); return {hm: String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0"), ngay: thu(t.getDay()) + ", " + t.getDate() + "/" + (t.getMonth() + 1) + "/" + t.getFullYear()}; };
   var tick = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -1031,7 +1063,7 @@ function moKhach() {
     // vừa thu xong: giữ màn cảm ơn 12 giây, trừ khi đã quét đơn mới
     if (!g.xong && !ds.length && G && G.xong && Date.now() - XONG_LUC < 12000) return;
     if (g.xong) XONG_LUC = g.nhan || g.luc || 0;
-    if (g.xong && Date.now() - XONG_LUC >= 12000) g = {ten: g.ten, dc: g.dc, sdt: g.sdt, loi: g.loi, d: []};
+    if (g.xong && Date.now() - XONG_LUC >= 12000) g = {ten: g.ten, dc: g.dc, sdt: g.sdt, loi: g.loi, d: [], qc: g.qc, luc: g.luc};
     G = g;
     var dau = '<div class="mk-dau"><div class="logo">' + LOGO + '</div><div class="mk-tiem"><b>' + esc(g.ten || "Xin chào") + "</b><small>" + esc([g.dc, g.sdt ? "ĐT " + g.sdt : ""].filter(Boolean).join(" · ")) + '</small></div><div class="mk-gio"><b>' + gm.hm + "</b><small>" + gm.ngay + "</small></div></div>";
     var chan = '<div class="mk-chan">' + esc(g.loi || "Cảm ơn quý khách đã mua sắm tại " + (g.ten || "cửa hàng")) + "</div>";
@@ -1040,11 +1072,17 @@ function moKhach() {
       kieu = "xong"; var x = g.xong, cn = x.cach === "no" ? "Đã ghi nợ" : x.cach === "ck" ? "Đã nhận chuyển khoản" : "Thanh toán thành công";
       h = dau + '<div class="mk-giua"><div class="mk-tick">' + tick + "</div><p style=\"margin-top:1em\">" + cn + '</p><div class="mk-da">' + dd(x.tien || 0) + "</div>" +
         (x.thua > 0 ? '<div class="mk-the"><div><span>Tiền thối lại</span><b>' + dd(x.thua) + "</b></div></div>" : "") +
-        '<h1 style="font-size:2.2em;margin-top:.8em">Cảm ơn quý khách! <em>Hẹn gặp lại</em></h1></div>' + chan;
+        (x.kh && x.kh.cong > 0 ? '<div class="mk-the"><div><span>' + esc(x.kh.ten || "Quý khách") + ' được cộng</span><b>★ +' + x.kh.cong + " điểm</b></div></div>" : "") + '<h1 style="font-size:2.2em;margin-top:.8em">Cảm ơn quý khách! <em>Hẹn gặp lại</em></h1></div>' + chan;
       CU = {};
     } else if (!ds.length) {
-      kieu = "cho";
-      h = dau.replace('<div class="mk-gio"><b>' + gm.hm + "</b><small>" + gm.ngay + "</small></div>", "") + '<div class="mk-giua"><div class="logo">' + LOGO + '</div><h1>Xin chào <em>quý khách</em></h1><p>' + esc(g.ten || "") + '</p><div class="mk-dongho">' + gm.hm + '</div><p class="mo">' + gm.ngay + "</p></div>" + chan;
+      kieu = "cho"; var qc = g.qc || [], nQ = qc.length + 1, iQ = qc.length ? QI % nQ : 0;
+      var cham = qc.length ? '<div class="mk-cham">' + Array.apply(null, Array(nQ)).map(function (_, k) { return '<i class="' + (k === iQ ? "on" : "") + '"></i>'; }).join("") + "</div>" : "";
+      if (iQ > 0) { var q = qc[iQ - 1];
+        var hinh = q.anh ? '<img src="' + q.anh + '" alt="">' : q.l === "km" && !q.ma ? '<span class="chu km">%</span>' : '<span class="chu" style="' + nenHang({ten: q.ten || q.t}) + '">' + esc(chuTat(q.ten || q.t)) + "</span>";
+        h = dau + '<div class="mk-qc"><div class="mk-qc-anh">' + hinh + '</div><div class="mk-qc-nd"><span class="mk-qc-nhan ' + q.l + '">' + (q.l === "km" ? "🔥 Khuyến mãi" : "✨ Hàng mới về") + "</span><h2>" + esc(q.t) + "</h2>" +
+          (q.m ? "<p>" + esc(q.m) + "</p>" : "") + (q.gia ? '<div class="mk-qc-gia">' + (q.giaMoi > 0 && q.giaMoi < q.gia ? "<s>" + dd(q.gia) + "</s>" + dd(q.giaMoi) : dd(q.gia)) + (q.dv ? "<small> / " + esc(q.dv) + "</small>" : "") + "</div>" : "") + (q.den ? '<p class="mo">Áp dụng đến hết ' + ngayVN(q.den) + "</p>" : "") + "</div></div>" + cham + chan;
+      } else
+      h = dau.replace('<div class="mk-gio"><b>' + gm.hm + "</b><small>" + gm.ngay + "</small></div>", "") + '<div class="mk-giua"><div class="logo">' + LOGO + '</div><h1>Xin chào <em>quý khách</em></h1><p>' + esc(g.ten || "") + '</p><div class="mk-dongho">' + gm.hm + '</div><p class="mo">' + gm.ngay + "</p></div>" + cham + chan;
       CU = {};
     } else {
       kieu = "don"; var moi = -1, tt = g.tt, tongSL = 0;
@@ -1065,7 +1103,7 @@ function moKhach() {
       else if (g.qr) tra = '<span class="nhan">Quét mã để chuyển khoản</span><div class="mk-qr"><img src="' + g.qr + '" alt="QR"></div><div class="nh"><b>' + esc(g.tk || "") + "</b>" + esc(g.nh) + " · " + esc(g.stk) + "</div>";
       else tra = '<span class="nhan">Cảm ơn quý khách</span>';
       h = dau + '<div class="mk-than"><div class="mk-ds"><div class="mk-ds-dau"><b>Đơn hàng của quý khách</b><span>' + ds.length + ' món</span></div><div class="mk-cot"><span>#</span><span>Sản phẩm</span><span>SL</span><span>Đơn giá</span><span>Thành tiền</span></div><div class="mk-cuon" id="mk-cuon">' + dong + "</div></div>" +
-        '<div class="mk-phai">' + tom + '<div class="mk-tong"><span>Tổng thanh toán</span><b>' + dd(g.tong) + '</b></div><div class="mk-tt">' + tra + "</div></div></div>" + chan;
+        '<div class="mk-phai">' + (g.kh ? '<div class="mk-kh"><span class="sao">★</span><div><b>Xin chào ' + esc(g.kh.ten || "quý khách") + "!</b><small>" + (g.kh.moi ? "Khách mới · đơn này được tích " + g.kh.cong + " điểm" : "Bạn đang có " + soVN(g.kh.diem) + " điểm" + (g.kh.cong ? " · đơn này +" + g.kh.cong : "")) + "</small></div></div>" : "") + tom + '<div class="mk-tong"><span>Tổng thanh toán</span><b>' + dd(g.tong) + '</b></div><div class="mk-tt">' + tra + "</div></div></div>" + chan;
     }
     if (h === KHUNG) return; KHUNG = h;
     o.innerHTML = '<div id="mk">' + h + "</div>";
@@ -1075,6 +1113,7 @@ function moKhach() {
   var giuSang = function () { try { if (navigator.wakeLock && !document.hidden) navigator.wakeLock.request("screen").catch(function () {}); } catch (e) {} };
   giuSang(); document.addEventListener("visibilitychange", giuSang);
   document.addEventListener("click", function () { try { var de = document.documentElement; if (!document.fullscreenElement && de.requestFullscreen) de.requestFullscreen().catch(function () {}); } catch (e) {} giuSang(); });
+  setInterval(function () { if (G && !G.xong && !(G.d || []).length && (G.qc || []).length) { QI++; ve2(G); } }, 7000);
   var mm = location.hash.match(/khach=(\d{4,8})/);
   if (mm) {   // máy riêng: lấy đơn qua mạng
     var MK_G = null, luc = -1, lucM = -1, sai = 0, p2pMo = false;
@@ -1811,6 +1850,7 @@ function goiKhach() {
       (toiDa > 0 ? '<label class="ck" style="margin-top:-4px"><input type="checkbox" id="tt-dung-diem"' + (TT.diemDung ? " checked" : "") + "> Dùng " + toiDa + " điểm để giảm " + dd(toiDa * S.cd.giaDiem) + "</label>" : "");
     TT.toiDa = toiDa;
   } else o.innerHTML = s.length >= 9 && diemBat() ? '<div class="kh-goi">Khách mới — mua xong được tích điểm</div>' : "";
+  phatKhach();
 }
 function thoiHtml(tra) { return TT.dua ? "<span>" + (tra >= 0 ? "Tiền thối lại" : "Còn thiếu") + '</span><b class="so" style="color:' + (tra >= 0 ? "var(--xanh)" : "var(--do)") + '">' + dd(Math.abs(tra)) + "</b>" : ""; }
 function phaiTT() { return Math.max(0, tongDon(gio()) - tinhKM(gio()).tong - TT.giam - (TT.diemDung || 0) * (S.cd.giaDiem || 0)); }
@@ -1822,7 +1862,7 @@ function xongTT(nut) {
   var _xn1 = function () { var coIn = $("tt-in").checked; lsGhi("th_in", coIn);
   nut.disabled = true; nut.textContent = "Đang lưu…";
   goi("thanhToan", {dong: gio(), giam: TT.giam, cach: TT.cach, dua: TT.dua, khach: TT.khach, sdt: TT.sdt, diemDung: TT.diemDung || 0, km: tinhKM(gio())}).then(function (o) {
-    var tra = TT.cach === "tm" && TT.dua ? TT.dua - phai : null, xk = {tien: phai, thua: tra, cach: TT.cach};
+    var tra = TT.cach === "tm" && TT.dua ? TT.dua - phai : null, xk = {tien: phai, thua: tra, cach: TT.cach, kh: khTT()};
     DON.splice(CUR, 1); if (!DON.length) DON = [{d: []}]; CUR = Math.min(CUR, DON.length - 1); luuDon(); XEM_GIO = false;
     dongHop(); nhan(o); phatKhach(xk);
     hop("Đã thanh toán ✓", '<div class="phai-tra"><span>' + esc(o.vua) + '</span><b class="so">' + dd(phai) + "</b></div>" + (tra !== null && tra > 0 ? '<div class="hang-tong" style="font-size:19px"><span>Tiền thối lại</span><b class="xanh-chu so">' + dd(tra) + "</b></div>" : "") +
@@ -1830,7 +1870,7 @@ function xongTT(nut) {
     if (coIn) inHD(o.vua);
   }).catch(function (e) {
     if (laLoiMang(e)) {
-      var tra2 = TT.cach === "tm" && TT.dua ? TT.dua - phai : null, xk2 = {tien: phai, thua: tra2, cach: TT.cach};
+      var tra2 = TT.cach === "tm" && TT.dua ? TT.dua - phai : null, xk2 = {tien: phai, thua: tra2, cach: TT.cach, kh: khTT()};
       choThem({dong: gio(), giam: TT.giam, cach: TT.cach, dua: TT.dua, khach: TT.khach, sdt: TT.sdt, diemDung: TT.diemDung || 0, km: tinhKM(gio())});
       DON.splice(CUR, 1); if (!DON.length) DON = [{d: []}]; CUR = Math.min(CUR, DON.length - 1); luuDon(); XEM_GIO = false; dongHop(); ve(); phatKhach(xk2);
       hop("Đã lưu trên máy 📴", '<p class="mo" style="margin-top:-4px">Đang mất mạng nên đơn được lưu tạm trên máy này. Có mạng lại app sẽ <b>tự gửi lên</b>, giữ đúng giờ bán.</p><div class="phai-tra"><span>Phải thu</span><b class="so">' + dd(phai) + "</b></div>" + (tra2 !== null && tra2 > 0 ? '<div class="hang-tong" style="font-size:19px"><span>Tiền thối lại</span><b class="xanh-chu so">' + dd(tra2) + "</b></div>" : "") + '<button class="btn chinh lon" style="margin-top:14px" data-dong="1" autofocus>Đơn mới</button>');
