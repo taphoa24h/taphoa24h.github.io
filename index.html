@@ -968,7 +968,7 @@ var CH = (function () {
 })();
 </script>
 <script>
-var PHIEN = "v3.13.3";   // số phiên bản hiện trong menu tài khoản
+var PHIEN = "v3.13.4";   // số phiên bản hiện trong menu tài khoản
 var THAT = true;
 var S = null, ANH = {}, TRANG = "", TIM = "", NHOM = "Tất cả", HD_LOC = "nay", HD_TIM = "", KHO_LOC = "tat", KHO_TIM = "", KH_LOC = "tat", KH_TIM = "", BC = "thang", TT = null, NH = null, XEM_GIO = false, PIN_GO = "";
 var $ = function (i) { return document.getElementById(i); };
@@ -1397,7 +1397,7 @@ function veDN(loi) {
         '<div class="dn-nhan-pin">Mã PIN</div><div class="dn-cham" id="dn-cham"></div><div class="dn-loi" id="dn-loi">' + esc(loi || "") + '</div><div class="dn-phim">' +
         [1, 2, 3, 4, 5, 6, 7, 8, 9, "⌫", 0, "ok"].map(function (x) { return '<button data-pin="' + x + '"' + (x === "ok" ? ' class="ok-p" title="Đăng nhập" aria-label="Đăng nhập"' : x === "⌫" ? ' class="phu-p" title="Xoá 1 số" aria-label="Xoá 1 số"' : "") + ">" + (x === "ok" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>' : x === "⌫" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M18 9l-6 6M12 9l6 6"/></svg>' : x) + "</button>"; }).join("") +
         '</div><label class="dn-nho"><span>Ghi nhớ đăng nhập trên máy này</span><span class="gat"><input type="checkbox" id="dn-nho"' + (DN_NHO ? " checked" : "") + "><span></span></span></label>" +
-        '<div class="dn-pc"><button class="btn lon" data-pin="ok">Đăng nhập</button><button class="dn-xoa" data-pin="C">Xoá mã đã gõ</button></div>'));
+        '<div class="dn-pc"><button class="btn lon" data-pin="ok">Đăng nhập</button><button class="dn-xoa" data-pin="C">Xoá mã đã gõ</button></div><button class="dn-mk" data-dn-mk="1">📺 Dùng máy này làm màn hình cho khách</button>'));
   PIN_GO = ""; chamPin(); var dn0 = $("dn"); if (dn0) dn0.classList.toggle("pin", !!c);
 }
 function chamPin() { var o = $("dn-cham"); if (!o) return; var n = Math.max(4, Math.min(6, PIN_GO.length + (PIN_GO.length >= 4 && PIN_GO.length < 6 ? 1 : 0))); o.classList.remove("sai"); o.innerHTML = Array.from({length: n}, function (_, i) { return '<i class="' + (i < PIN_GO.length ? "d" : i === PIN_GO.length ? "ht" : "") + '"></i>'; }).join(""); }
