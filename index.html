@@ -890,7 +890,7 @@ var CH = (function () {
 })();
 </script>
 <script>
-var PHIEN = "v3.10.0";   // số phiên bản hiện trong menu tài khoản
+var PHIEN = "v3.11.0";   // số phiên bản hiện trong menu tài khoản
 var THAT = true;
 var S = null, ANH = {}, TRANG = "", TIM = "", NHOM = "Tất cả", HD_LOC = "nay", HD_TIM = "", KHO_LOC = "tat", KHO_TIM = "", KH_LOC = "tat", KH_TIM = "", BC = "thang", TT = null, NH = null, XEM_GIO = false, PIN_GO = "";
 var $ = function (i) { return document.getElementById(i); };
@@ -961,11 +961,37 @@ function luuDon() { lsGhi("th_don", {d: DON, c: CUR}); phatKhach(); }
 var KENH = null; try { KENH = new BroadcastChannel("th-khach"); } catch (e) {}
 var MK_URL = "https://taphoa24h.github.io/";
 var MK = {bat: lsDoc("th_mk_bat", false), ma: lsDoc("th_mk_ma", ""), dang: false, cho: null, h: 0};
-function mkDay(g) {
+function mkDay(g, tre) {
   MK.cho = g; if (MK.dang) return; clearTimeout(MK.h);
   MK.h = setTimeout(function () { var x = MK.cho; MK.cho = null; if (!x) return; MK.dang = true;
-    goiTho("mkDat", [MK.ma, x]).catch(function () {}).then(function () { MK.dang = false; if (MK.cho) mkDay(MK.cho); }); }, 120);
+    goiTho("mkDat", [MK.ma, x]).catch(function () {}).then(function () { MK.dang = false; if (MK.cho) mkDay(MK.cho, MK.tre); }); }, MK.tre = tre || 120);
 }
+var RTC_CAU = {iceServers: [{urls: "stun:stun.l.google.com:19302"}]};
+function choGom(pc) { return new Promise(function (ok) { if (pc.iceGatheringState === "complete") return ok(); var h = setTimeout(ok, 2500); pc.addEventListener("icegatheringstatechange", function () { if (pc.iceGatheringState === "complete") { clearTimeout(h); ok(); } }); }); }
+var P2P = {kenh: {}, chay: false, biet: ""};
+function p2pGui(g) { var n = 0, s = JSON.stringify(g); for (var id in P2P.kenh) { var c = P2P.kenh[id]; if (c.readyState === "open") { try { c.send(s); n++; } catch (e) {} } } return n; }
+function p2pBan() {   // máy bán: chờ máy khách xin nối thẳng
+  if (P2P.chay || !MK.bat || !MK.ma || !window.RTCPeerConnection) return; P2P.chay = true;
+  var vong = function () {
+    if (!MK.bat) { P2P.chay = false; return; }
+    goiTho("mkCho", [MK.ma, P2P.biet]).then(function (o) {
+      if (o && o.id && o.id !== P2P.biet) { P2P.biet = o.id; p2pNhan(o); }
+      setTimeout(vong, THAT ? 50 : 700);
+    }).catch(function () { setTimeout(vong, 5000); });
+  };
+  vong();
+}
+function p2pNhan(o) {
+  try {
+    var pc = new RTCPeerConnection(RTC_CAU), id = o.id;
+    var bo = function () { delete P2P.kenh[id]; try { pc.close(); } catch (e) {} };
+    pc.ondatachannel = function (e) { var c = e.channel; c.onopen = function () { P2P.kenh[id] = c; phatKhach(); }; c.onclose = bo; };
+    pc.onconnectionstatechange = function () { if (/failed|closed/.test(pc.connectionState)) bo(); };
+    pc.setRemoteDescription({type: "offer", sdp: o.sdp}).then(function () { return pc.createAnswer(); }).then(function (a) { return pc.setLocalDescription(a); })
+      .then(function () { return choGom(pc); }).then(function () { return goiTho("mkGui", [MK.ma, "answer", id, pc.localDescription.sdp]); }).catch(bo);
+  } catch (e) {}
+}
+setInterval(function () { if (S && MK.bat) p2pBan(); }, 3000);
 var KH_CK = 0;   // >0: đang mở mã QR thu nhanh chuyển khoản (số tiền)
 function phatKhach(xong) {
   if (!S || !S.cd) return; var d = gio(), km = tinhKM(d), c = S.cd, tien = tongDon(d), tt = null;
@@ -977,7 +1003,7 @@ function phatKhach(xong) {
     d: d.map(function (x) { var h = hang(x.ma) || {}; return {ten: h.ten || x.ma, dv: h.dv || "", sl: x.sl, gia: x.gia}; }),
     tien: tien, km: km.tong, kmTen: km.ten || "", tt: tt, tong: tong, qr: xong || (tt && tt.cach !== "ck") ? "" : qrUrl(tong), xong: xong || null, luc: Date.now()};
   try { if (KENH) KENH.postMessage(g); localStorage.setItem("th_khach", JSON.stringify(g)); } catch (e) {}
-  if (MK.bat && MK.ma) mkDay(g);
+  if (MK.bat && MK.ma) { var nT = p2pGui(g); mkDay(g, nT ? 1500 : 120); }
 }
 function moHopKhach() {
   var link = MK_URL + "#khach=" + MK.ma;
@@ -1051,11 +1077,32 @@ function moKhach() {
   document.addEventListener("click", function () { try { var de = document.documentElement; if (!document.fullscreenElement && de.requestFullscreen) de.requestFullscreen().catch(function () {}); } catch (e) {} giuSang(); });
   var mm = location.hash.match(/khach=(\d{4,8})/);
   if (mm) {   // máy riêng: lấy đơn qua mạng
-    var MK_G = null, luc = -1, sai = 0;
+    var MK_G = null, luc = -1, lucM = -1, sai = 0, p2pMo = false;
+    var nhanG = function (g) { if (g && g.luc !== undefined && g.luc > luc) { luc = g.luc; g.nhan = Date.now(); MK_G = g; ve2(g); } };
+    var noiThang = function () {
+      if (!window.RTCPeerConnection) return;
+      var pc, c, id = String(Date.now()) + Math.random().toString(36).slice(2, 6), xong = false, hen = 0;
+      var lai = function () { if (xong) return; xong = true; p2pMo = false; clearTimeout(hen); try { pc.close(); } catch (e) {} setTimeout(noiThang, 3000); };
+      try { pc = new RTCPeerConnection(RTC_CAU); c = pc.createDataChannel("mk"); } catch (e) { return; }
+      c.onopen = function () { p2pMo = true; clearTimeout(hen); document.body.removeAttribute("data-mk"); };
+      c.onmessage = function (e) { try { nhanG(JSON.parse(e.data)); } catch (e2) {} };
+      c.onclose = lai; pc.onconnectionstatechange = function () { if (/failed|closed/.test(pc.connectionState)) lai(); };
+      pc.createOffer().then(function (o) { return pc.setLocalDescription(o); }).then(function () { return choGom(pc); })
+        .then(function () { return goiTho("mkGui", [mm[1], "offer", id, pc.localDescription.sdp]); })
+        .then(function () {
+          var doi = function () { if (xong) return; goiTho("mkDoi", [mm[1], id]).then(function (a) {
+            if (xong) return;
+            if (a && a.sdp) { pc.setRemoteDescription({type: "answer", sdp: a.sdp}).catch(lai); hen = setTimeout(function () { if (!p2pMo) lai(); }, 15000); }
+            else setTimeout(doi, THAT ? 50 : 700);
+          }).catch(function () { setTimeout(doi, 5000); }); };
+          doi();
+        }).catch(function () { setTimeout(lai, 5000); });
+    };
     var vong = function () {
-      goiTho("mkXem", [mm[1], luc]).then(function (g) {
+      if (p2pMo) { setTimeout(vong, 1000); return; }
+      goiTho("mkXem", [mm[1], lucM]).then(function (g) {
         sai = 0; document.body.removeAttribute("data-mk");
-        if (g && g.luc !== undefined && g.luc !== luc) { luc = g.luc; g.nhan = Date.now(); MK_G = g; ve2(g); setTimeout(vong, 30); }
+        if (g && g.luc !== undefined && g.luc !== lucM) { lucM = g.luc; nhanG(g); setTimeout(vong, 30); }
         else setTimeout(vong, THAT ? 60 : 700);
       }).catch(function (e) {
         sai++; document.body.setAttribute("data-mk", "mat");
@@ -1063,7 +1110,7 @@ function moKhach() {
         setTimeout(vong, Math.min(10000, 1500 * sai));
       });
     };
-    ve2(null); vong();
+    ve2(null); vong(); noiThang();
     setInterval(function () { ve2(MK_G); }, 5000);
     return;
   }

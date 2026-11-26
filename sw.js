@@ -1,4 +1,4 @@
-const BAN = "tth-v3.10.0";
+const BAN = "tth-v3.11.0";
 const VO = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 const NGOAI = "tth-ngoai", HOST = ["cdn.jsdelivr.net", "fastly.jsdelivr.net", "fonts.googleapis.com", "fonts.gstatic.com", "cdnjs.cloudflare.com"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(BAN).then(c => c.addAll(VO.map(u => new Request(u, {cache: "reload"})))).then(() => self.skipWaiting())); });
