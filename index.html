@@ -717,7 +717,11 @@ body.man-khach{background:#03100a!important;color:#ecfdf5;margin:0;overflow:hidd
 @keyframes mkNay{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}@keyframes mkVe{to{stroke-dashoffset:0}}
 .mk-da{font-size:3.4em;font-weight:800;letter-spacing:-.03em;margin:.15em 0;color:#ecfdf5}
 .mk-the{display:inline-flex;gap:2em;margin-top:.6em;padding:.7em 1.4em;border-radius:1em;background:rgba(255,255,255,.05);border:1px solid var(--mk-vien)}.mk-the span{display:block;color:var(--mk-mo);font-size:.75em}.mk-the b{font-size:1.5em;color:var(--mk-x2)}
-@media(max-aspect-ratio:1/1){.mk-than{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}#mk{font-size:clamp(14px,2.6vw,26px)}.mk-tt{flex:none}}
+body.man-khach[data-mk=mat]:after{content:"Đang kết nối lại…";position:fixed;right:14px;bottom:10px;background:#7f1d1d;color:#fecaca;font-size:13px;padding:5px 12px;border-radius:99px}
+.mk-chon{display:grid;gap:12px}.mk-chon .o{border:1px solid var(--vien);border-radius:14px;padding:14px}.mk-chon .o>b{display:block;font-size:15px;margin-bottom:4px}.mk-chon .o p{margin:0 0 10px}
+.mk-ma{font-size:34px;font-weight:800;letter-spacing:.25em;text-align:center;margin:4px 0}.mk-qrbox{width:190px;margin:4px auto 12px}.mk-qrbox svg{width:100%;height:auto;display:block}
+.dn-mk{display:block;margin:14px auto 0;background:none;border:0;color:var(--mo);font-size:13px;text-decoration:underline;cursor:pointer}
+@media(max-aspect-ratio:1/1){#mk{font-size:clamp(13px,2.7vw,26px)}.mk-than{grid-template-columns:1fr;grid-template-rows:minmax(28vh,1fr) auto;padding:.8em 1em;gap:.8em}.mk-dau{padding:.7em 1em}.mk-phai{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.8em;align-items:stretch}.mk-tom,.mk-tong{grid-column:1}.mk-tt{grid-column:2;grid-row:1/3;flex:none;padding:.6em}.mk-tt .nhan{font-size:.6em}.mk-qr img{height:min(19vh,10em)}.mk-tong b{font-size:2.1em}.mk-cot,.mk-dong{grid-template-columns:1.6em minmax(0,1fr) 2.6em 4.6em 5.6em;gap:.5em;padding-left:.8em;padding-right:.8em}.mk-dongho{font-size:4em}.mk-giua h1{font-size:2.2em}}
 
 .lai-o{display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:end}.lai-goi{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:12px}.lai-goi button{padding:7px 11px;border-radius:99px;border:1px solid var(--vien);background:#fff;font-weight:700;cursor:pointer;font-size:13px}.lai-goi button:hover{border-color:var(--xanh);color:var(--xanh-d)}
 .lai-chu{margin:-6px 0 10px;color:var(--xanh-d);font-weight:600}
@@ -886,7 +890,7 @@ var CH = (function () {
 })();
 </script>
 <script>
-var PHIEN = "v3.9.0";   // số phiên bản hiện trong menu tài khoản
+var PHIEN = "v3.10.0";   // số phiên bản hiện trong menu tài khoản
 var THAT = true;
 var S = null, ANH = {}, TRANG = "", TIM = "", NHOM = "Tất cả", HD_LOC = "nay", HD_TIM = "", KHO_LOC = "tat", KHO_TIM = "", KH_LOC = "tat", KH_TIM = "", BC = "thang", TT = null, NH = null, XEM_GIO = false, PIN_GO = "";
 var $ = function (i) { return document.getElementById(i); };
@@ -955,6 +959,13 @@ var DON = [], CUR = 0;
 function luuDon() { lsGhi("th_don", {d: DON, c: CUR}); phatKhach(); }
 // ---- màn hình cho khách xem (cửa sổ thứ 2 trên cùng máy: màn hình phụ / máy tính bảng nối HDMI) ----
 var KENH = null; try { KENH = new BroadcastChannel("th-khach"); } catch (e) {}
+var MK_URL = "https://taphoa24h.github.io/";
+var MK = {bat: lsDoc("th_mk_bat", false), ma: lsDoc("th_mk_ma", ""), dang: false, cho: null, h: 0};
+function mkDay(g) {
+  MK.cho = g; if (MK.dang) return; clearTimeout(MK.h);
+  MK.h = setTimeout(function () { var x = MK.cho; MK.cho = null; if (!x) return; MK.dang = true;
+    goiTho("mkDat", [MK.ma, x]).catch(function () {}).then(function () { MK.dang = false; if (MK.cho) mkDay(MK.cho); }); }, 120);
+}
 var KH_CK = 0;   // >0: đang mở mã QR thu nhanh chuyển khoản (số tiền)
 function phatKhach(xong) {
   if (!S || !S.cd) return; var d = gio(), km = tinhKM(d), c = S.cd, tien = tongDon(d), tt = null;
@@ -966,6 +977,22 @@ function phatKhach(xong) {
     d: d.map(function (x) { var h = hang(x.ma) || {}; return {ten: h.ten || x.ma, dv: h.dv || "", sl: x.sl, gia: x.gia}; }),
     tien: tien, km: km.tong, kmTen: km.ten || "", tt: tt, tong: tong, qr: xong || (tt && tt.cach !== "ck") ? "" : qrUrl(tong), xong: xong || null, luc: Date.now()};
   try { if (KENH) KENH.postMessage(g); localStorage.setItem("th_khach", JSON.stringify(g)); } catch (e) {}
+  if (MK.bat && MK.ma) mkDay(g);
+}
+function moHopKhach() {
+  var link = MK_URL + "#khach=" + MK.ma;
+  hop("Màn hình cho khách", '<div class="mk-chon">' +
+    '<div class="o"><b>📺 Màn hình phụ nối với máy này</b><p class="mo nho">Máy tính có 2 màn hình: mở cửa sổ, kéo sang màn hình quay về phía khách rồi bấm F11.</p><button class="btn" data-mk-cuaso="1">Mở cửa sổ</button></div>' +
+    '<div class="o"><b>📱 Máy tính bảng / điện thoại khác</b>' + (MK.bat
+      ? '<p class="mo nho">Trên máy để cho khách xem: <b>quét mã QR</b> này bằng camera. Hoặc mở <b>' + esc(MK_URL.replace(/^https?:\/\//, "").replace(/\/$/, "")) + '</b>, bấm "Dùng máy này làm màn hình cho khách" rồi nhập mã:</p><div class="mk-ma">' + MK.ma + '</div><div class="mk-qrbox" id="mk-qr"></div><div class="hai"><button class="btn" data-mk-chia="1">Gửi link</button><button class="btn" data-mk-tat="1">Tắt</button></div>'
+      : '<p class="mo nho">Đơn đang bán hiện sang máy khác qua mạng (chậm khoảng 1 giây). Cả hai máy cần có mạng.</p><button class="btn chinh" data-mk-bat="1">Bật</button>') + "</div></div>");
+  if (MK.bat) veQRLink(link);
+}
+function veQRLink(chu) {
+  var o = $("mk-qr"); if (!o) return;
+  var ve3 = function () { try { var q = qrcode(0, "M"); q.addData(chu); q.make(); o.innerHTML = q.createSvgTag({cellSize: 5, margin: 2, scalable: true}); } catch (e) { o.innerHTML = ""; } };
+  if (window.qrcode) return ve3();
+  var sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"; sc.onload = ve3; sc.onerror = function () { o.innerHTML = ""; }; document.head.appendChild(sc);
 }
 function moKhach() {
   document.body.className = "man-khach"; document.title = "Màn hình khách";
@@ -977,7 +1004,7 @@ function moKhach() {
     var o = $("trang"); if (!o) return; g = g || {}; var ds = g.d || [], gm = gioMk();
     // vừa thu xong: giữ màn cảm ơn 12 giây, trừ khi đã quét đơn mới
     if (!g.xong && !ds.length && G && G.xong && Date.now() - XONG_LUC < 12000) return;
-    if (g.xong) XONG_LUC = g.luc || 0;
+    if (g.xong) XONG_LUC = g.nhan || g.luc || 0;
     if (g.xong && Date.now() - XONG_LUC >= 12000) g = {ten: g.ten, dc: g.dc, sdt: g.sdt, loi: g.loi, d: []};
     G = g;
     var dau = '<div class="mk-dau"><div class="logo">' + LOGO + '</div><div class="mk-tiem"><b>' + esc(g.ten || "Xin chào") + "</b><small>" + esc([g.dc, g.sdt ? "ĐT " + g.sdt : ""].filter(Boolean).join(" · ")) + '</small></div><div class="mk-gio"><b>' + gm.hm + "</b><small>" + gm.ngay + "</small></div></div>";
@@ -1018,6 +1045,28 @@ function moKhach() {
     o.innerHTML = '<div id="mk">' + h + "</div>";
     if (kieu === "don") { var cu = $("mk-cuon"), m = cu && cu.querySelector(".moi"); if (cu) { if (m) m.scrollIntoView({block: "nearest"}); else cu.scrollTop = cu.scrollHeight; } }
   };
+  // giữ màn hình luôn sáng; chạm 1 lần để toàn màn hình
+  var giuSang = function () { try { if (navigator.wakeLock && !document.hidden) navigator.wakeLock.request("screen").catch(function () {}); } catch (e) {} };
+  giuSang(); document.addEventListener("visibilitychange", giuSang);
+  document.addEventListener("click", function () { try { var de = document.documentElement; if (!document.fullscreenElement && de.requestFullscreen) de.requestFullscreen().catch(function () {}); } catch (e) {} giuSang(); });
+  var mm = location.hash.match(/khach=(\d{4,8})/);
+  if (mm) {   // máy riêng: lấy đơn qua mạng
+    var MK_G = null, luc = -1, sai = 0;
+    var vong = function () {
+      goiTho("mkXem", [mm[1], luc]).then(function (g) {
+        sai = 0; document.body.removeAttribute("data-mk");
+        if (g && g.luc !== undefined && g.luc !== luc) { luc = g.luc; g.nhan = Date.now(); MK_G = g; ve2(g); setTimeout(vong, 30); }
+        else setTimeout(vong, THAT ? 60 : 700);
+      }).catch(function (e) {
+        sai++; document.body.setAttribute("data-mk", "mat");
+        if (/không đúng/i.test(String((e && e.message) || e))) { $("trang").innerHTML = '<div id="mk"><div class="mk-giua"><h1>Mã màn hình không đúng</h1><p>' + esc((e && e.message) || e) + "</p></div></div>"; return; }
+        setTimeout(vong, Math.min(10000, 1500 * sai));
+      });
+    };
+    ve2(null); vong();
+    setInterval(function () { ve2(MK_G); }, 5000);
+    return;
+  }
   ve2(lsDoc("th_khach", null));
   if (KENH) KENH.onmessage = function (e) { ve2(e.data); };
   window.addEventListener("storage", function (e) { if (e.key === "th_khach") ve2(lsDoc("th_khach", null)); });
@@ -1082,6 +1131,16 @@ window.addEventListener("online", function () { MANG = true; veMang(); setTimeou
 window.addEventListener("offline", function () { MANG = false; veMang(); });
 setInterval(function () { if (choDS().length && !DANG_GUI) guiCho(); }, 20000);
 function trangThai(t) { var o = $("dongbo"); if (o) o.className = t || ""; }
+function goiTho(fn, a) {
+  return new Promise(function (ok, loi) {
+    var xong = function (x) { if (typeof x === "string") { try { x = JSON.parse(x); } catch (e) {} } ok(x); };
+    if (!THAT) { setTimeout(function () { try { xong(MAU(fn, [CH.k + "|" + (DN.ma || "") + "|" + (DN.pin || "")].concat(a))); } catch (e) { loi(e); } }, window.TRE_MAU || 150); return; }
+    fetch(API, {method: "POST", body: JSON.stringify({fn: fn, v: PHIEN, args: [CH.k + "|" + (DN.ma || "") + "|" + (DN.pin || "")].concat(a)})})
+      .then(function (r) { return r.json(); })
+      .then(function (o) { if (o && o.ok) xong(o.kq); else loi(new Error((o && o.loi) || "Lỗi máy chủ")); })
+      .catch(function () { loi(new Error("Không kết nối được máy chủ")); });
+  });
+}
 function goi(fn) {
   var a = Array.prototype.slice.call(arguments, 1); trangThai("dang");
   return new Promise(function (ok, loi) {
@@ -1171,7 +1230,7 @@ function veDN(loi) {
   var o = DS_NGUOI, c = DN_CHON;
   var buoc = '<div class="dn-buoc"><i class="d"></i><i class="' + (c ? "d" : "") + '"></i><span>Bước ' + (c ? 2 : 1) + "/2</span></div>";
   khungDN(o.tenTiem, buoc + "<h2>" + (c ? "Nhập mã PIN" : "Ai đang bán hàng?") + '</h2><div class="phu">' + (c ? '<span class="chi-dt">4–6 chữ số · bấm ✓ để vào</span><span class="chi-pc">Gõ mã PIN bằng bàn phím · Enter để vào</span>' : "Chọn tài khoản của bạn để tiếp tục") + "</div>" +
-    (!c ? '<div class="dn-ds">' + o.nv.map(function (n) { return '<button data-dn-nguoi="' + esc(n.ma) + '"><span class="thumb" style="' + nenHang({nhom: n.ten}) + '">' + esc(chuTat(n.ten)) + '</span><span class="nd"><b>' + esc(n.ten) + "</b><small>" + (n.vai === "chu" ? "Chủ tiệm · toàn quyền" : "Nhân viên bán hàng") + '</small></span><span class="mui">›</span></button>'; }).join("") + "</div>"
+    (!c ? '<div class="dn-ds">' + o.nv.map(function (n) { return '<button data-dn-nguoi="' + esc(n.ma) + '"><span class="thumb" style="' + nenHang({nhom: n.ten}) + '">' + esc(chuTat(n.ten)) + '</span><span class="nd"><b>' + esc(n.ten) + "</b><small>" + (n.vai === "chu" ? "Chủ tiệm · toàn quyền" : "Nhân viên bán hàng") + '</small></span><span class="mui">›</span></button>'; }).join("") + '</div><button class="dn-mk" data-dn-mk="1">📺 Dùng máy này làm màn hình cho khách</button>'
       : '<div class="dn-chon"><span class="thumb" style="' + nenHang({nhom: c.ten}) + '">' + esc(chuTat(c.ten)) + '</span><span class="nd"><b>' + esc(c.ten) + "</b><small>" + (c.vai === "chu" ? "Chủ tiệm" : "Nhân viên") + "</small></span>" + (o.nv.length > 1 ? '<button class="btn nho" data-dn-doi="1">Đổi tài khoản</button>' : "") + "</div>" +
         '<div class="dn-nhan-pin">Mã PIN</div><div class="dn-cham" id="dn-cham"></div><div class="dn-loi" id="dn-loi">' + esc(loi || "") + '</div><div class="dn-phim">' +
         [1, 2, 3, 4, 5, 6, 7, 8, 9, "⌫", 0, "ok"].map(function (x) { return '<button data-pin="' + x + '"' + (x === "ok" ? ' class="ok-p" title="Đăng nhập" aria-label="Đăng nhập"' : x === "⌫" ? ' class="phu-p" title="Xoá 1 số" aria-label="Xoá 1 số"' : "") + ">" + (x === "ok" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>' : x === "⌫" ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M18 9l-6 6M12 9l6 6"/></svg>' : x) + "</button>"; }).join("") +
@@ -2452,7 +2511,12 @@ document.addEventListener("click", function (e) {
   if (t.closest("[data-cam-thu]")) { dongCam(); if (TRANG !== "ban") { TRANG = "ban"; ve(); } thuNhanh("tm"); return; }
   if (t.closest("[data-cam-den]")) { var dn2 = $("cam-den"), tr2 = CAM && CAM.st.getVideoTracks()[0]; if (!tr2) return; var bat = !dn2.classList.contains("bat"); tr2.applyConstraints({advanced: [{torch: bat}]}).then(function () { dn2.classList.toggle("bat", bat); }).catch(function () { bao("Máy này không bật được đèn từ web"); }); return; }
   if ((b = t.closest("[data-cam-lien]"))) { var cL = b.dataset.camLien, nhL = NH; $("hop").hidden = true; if (cL === "nhap" && nhL) { NH = nhL; formNhap(); } moCam(cL); return; }
-  if (t.closest("[data-mo-khach]")) { var m3 = $("menu-ng"); if (m3) m3.remove(); var wk = window.open(location.pathname + location.search + "#khach", "man-khach", "width=1100,height=700"); if (!wk) alert("Trình duyệt chặn cửa sổ mới — cho phép cửa sổ bật lên rồi bấm lại."); phatKhach(); bao("Kéo cửa sổ màn hình khách sang màn hình phụ, bấm F11 để toàn màn hình"); return; }
+  if (t.closest("[data-mo-khach]")) { var m3 = $("menu-ng"); if (m3) m3.remove(); moHopKhach(); return; }
+  if (t.closest("[data-mk-bat]")) { if (!MK.ma) { MK.ma = String(1000 + Math.floor(Math.random() * 9000)); lsGhi("th_mk_ma", MK.ma); } MK.bat = true; lsGhi("th_mk_bat", true); moHopKhach(); phatKhach(); return; }
+  if (t.closest("[data-mk-tat]")) { MK.bat = false; lsGhi("th_mk_bat", false); moHopKhach(); return; }
+  if (t.closest("[data-mk-chia]")) { var lk = MK_URL + "#khach=" + MK.ma; if (navigator.share) navigator.share({title: "Màn hình cho khách", url: lk}).catch(function () {}); else { try { navigator.clipboard.writeText(lk); bao("Đã chép link màn hình khách"); } catch (e) { alert(lk); } } return; }
+  if (t.closest("[data-dn-mk]")) { hoiNhap("Nhập mã màn hình khách (4 số).\nXem trên máy bán hàng: bấm tên người bán ở góc trên → Mở màn hình cho khách → Máy tính bảng / điện thoại khác.", "", "so").then(function (v) { v = String(v || "").replace(/\D/g, ""); if (v.length >= 4) { location.hash = "khach=" + v; location.reload(); } }); return; }
+  if (t.closest("[data-mk-cuaso]")) { dongHop(); var wk = window.open(location.pathname + location.search + "#khach", "man-khach", "width=1100,height=700"); if (!wk) alert("Trình duyệt chặn cửa sổ mới — cho phép cửa sổ bật lên rồi bấm lại."); phatKhach(); bao("Kéo cửa sổ màn hình khách sang màn hình phụ, bấm F11 để toàn màn hình"); return; }
   if (t.closest("[data-hoan]")) { var fH = HOAN_FN; HOAN_FN = null; var oH = $("hoan"); if (oH) oH.classList.remove("hien"); if (fH) fH(); return; }
   if (t.closest("[data-ghi-no]")) { if (!gio().length) return; TT = {cach: "no", giam: 0, dua: 0, khach: "", sdt: ""}; veTT(); setTimeout(function () { var k = $("tt-khach"); if (k) k.focus(); }, 80); return; }
   if (t.closest("[data-hd-them]")) { var oT = $("hd-them"); if (oT) oT.hidden = !oT.hidden; return; }
