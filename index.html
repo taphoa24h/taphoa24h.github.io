@@ -792,6 +792,11 @@ body.man-khach #trang{position:relative;z-index:1}
 .mk-tong .nhan-tong{display:block;font-size:.8em;opacity:.9;text-transform:uppercase;letter-spacing:.08em}
 .mk-tong>b small.d{font-size:.48em;margin-left:.06em;vertical-align:.62em;font-weight:700;opacity:.85}
 .mk-tt{flex:1}
+.mk-moi-tt{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.45em;padding:.5em;animation:mkVao .5s ease-out}
+.mk-moi-tt .logo{width:3.6em;height:3.6em;opacity:.9;filter:drop-shadow(0 .4em 1.2em rgba(16,185,129,.35))}.mk-moi-tt .logo svg{width:100%;height:100%}
+.mk-moi-tt b{font-size:1.05em;color:#ecfdf5;margin-top:.3em}.mk-moi-tt>span{font-size:.75em;color:#8fb5a4}
+.mk-cach{display:flex;gap:.5em;flex-wrap:wrap;justify-content:center;margin-top:.4em}.mk-cach i{font-style:normal;font-size:.75em;padding:.35em .8em;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#c9e3d7}
+.mk-qr{animation:mkNay .5s cubic-bezier(.2,1.5,.4,1),mkVien 2.4s ease-in-out .5s infinite}
 @media(max-aspect-ratio:1/1){.mk-cot,.mk-dong{grid-template-columns:2.4em minmax(0,1fr) 3.2em 5.4em;gap:.55em}.mk-dong .mk-anh{width:2.9em;height:2.9em}
 .mk-phai{grid-template-areas:"tong tt";grid-template-rows:auto;align-items:stretch}.mk-tong{display:flex;flex-direction:column;justify-content:center;align-self:stretch}.mk-tong>b{font-size:2.3em}}
 
@@ -963,7 +968,7 @@ var CH = (function () {
 })();
 </script>
 <script>
-var PHIEN = "v3.13.1";   // số phiên bản hiện trong menu tài khoản
+var PHIEN = "v3.13.2";   // số phiên bản hiện trong menu tài khoản
 var THAT = true;
 var S = null, ANH = {}, TRANG = "", TIM = "", NHOM = "Tất cả", HD_LOC = "nay", HD_TIM = "", KHO_LOC = "tat", KHO_TIM = "", KH_LOC = "tat", KH_TIM = "", BC = "thang", TT = null, NH = null, XEM_GIO = false, PIN_GO = "";
 var $ = function (i) { return document.getElementById(i); };
@@ -1090,7 +1095,7 @@ function phatKhach(xong) {
   if (typeof xong === "number") xong = {tien: xong};
   var g = {ten: c.tenTiem, dc: c.diaChi || "", sdt: c.sdt || "", loi: c.loiCam || "", nh: c.nh || "", stk: c.stk || "", tk: c.tenTK || "",
     d: d.map(function (x) { var h = hang(x.ma) || {}; return {ma: x.ma, ten: h.ten || x.ma, dv: h.dv || "", sl: x.sl, gia: x.gia}; }),
-    tien: tien, km: km.tong, kmTen: km.ten || "", tt: tt, kh: tt ? khTT() : null, tong: tong, qr: xong || (tt && tt.cach !== "ck") ? "" : qrUrl(tong), xong: xong || null, luc: Date.now()};
+    tien: tien, km: km.tong, kmTen: km.ten || "", tt: tt, kh: tt ? khTT() : null, tong: tong, qr: !xong && tt && tt.cach === "ck" ? qrUrl(tong) : "", xong: xong || null, luc: Date.now()};
   if (!d.length) g.qc = qcDs();
   // bản có ảnh: cùng máy + nối thẳng; bản gửi qua máy chủ bỏ ảnh cho nhẹ
   var gA = g.qc ? Object.assign({}, g, {qc: g.qc.map(function (q) { return Object.assign({}, q, {anh: q.ma && ANH[q.ma] ? ANH[q.ma] : ""}); })}) : g;
@@ -1165,7 +1170,8 @@ function moKhach() {
         (tt.dua ? '<div class="lon' + (tt.dua < tt.phai ? " thieu" : "") + '"><span>' + (tt.dua >= tt.phai ? "Tiền thối lại" : "Còn thiếu") + "</span><b>" + dd(Math.abs(tt.dua - tt.phai)) + "</b></div>" : "") + "</div>";
       else if (tt && tt.cach === "no") tra = '<span class="nhan">Ghi nợ</span><p style="margin:0;color:#c9e3d7">Đơn hàng được ghi vào sổ nợ</p>';
       else if (g.qr) tra = '<span class="nhan">Quét mã để chuyển khoản</span><div class="mk-qr"><img src="' + g.qr + '" alt="QR"></div><div class="nh"><b>' + esc(g.tk || "") + "</b>" + esc(g.nh) + " · " + esc(g.stk) + "</div>";
-      else tra = '<div class="mk-cuoi" style="opacity:.35"><div class="logo">' + LOGO + "</div><span>Cảm ơn quý khách</span></div>";
+      else if (tt && tt.cach === "ck") tra = '<span class="nhan">Chuyển khoản</span><p style="margin:0;color:#c9e3d7;text-align:center">Quý khách vui lòng chuyển khoản theo hướng dẫn của thu ngân</p>';
+      else tra = '<div class="mk-moi-tt"><div class="logo">' + LOGO + '</div><b>Mời quý khách kiểm tra đơn hàng</b><span>Thanh toán bằng tiền mặt hoặc chuyển khoản QR</span><div class="mk-cach"><i>💵 Tiền mặt</i><i>📱 Chuyển khoản</i></div></div>';
       var khH = g.kh ? '<div class="mk-kh"><span class="sao">★</span><div><b>Xin chào ' + esc(g.kh.ten || "quý khách") + "!</b><small>" + (g.kh.moi ? "Khách mới · đơn này được tích " + g.kh.cong + " điểm" : "Bạn đang có " + soVN(g.kh.diem) + " điểm" + (g.kh.cong ? " · đơn này +" + g.kh.cong : "")) + "</small></div></div>" : "";
       h = dau + '<div class="mk-than"><div class="mk-ds">' + khH + '<div class="mk-ds-dau"><b>Đơn hàng của quý khách</b><span>' + ds.length + " món</span></div>" +
         '<div class="mk-cot"><span></span><span>Sản phẩm</span><span>SL</span><span>Thành tiền</span></div><div class="mk-cuon" id="mk-cuon">' + dong +
