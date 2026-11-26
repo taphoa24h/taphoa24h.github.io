@@ -775,6 +775,25 @@ body.man-khach #trang{position:relative;z-index:1}
 .mk-tick{box-shadow:0 0 0 .9em rgba(16,185,129,.15),0 0 0 1.8em rgba(16,185,129,.07),0 0 4em rgba(16,185,129,.55)}
 .mk-hang{display:flex;gap:1em;justify-content:center;flex-wrap:wrap}.mk-hang .mk-the{margin-top:.6em}.mk-giua .mk-tick{width:5.2em;height:5.2em}.mk-da{font-size:3em;background:linear-gradient(180deg,#fff,#a7f3d0);-webkit-background-clip:text;background-clip:text;color:transparent}
 @media(max-aspect-ratio:1/1){.mk-chay{margin:0 1.5em .6em}.mk-cot,.mk-dong{grid-template-columns:2.2em minmax(0,1fr) 2em 4.2em 5.2em;gap:.45em}.mk-cot span{font-size:.5em}.mk-dong .mk-anh{width:2.6em;height:2.6em}.mk-phai{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"tom tt" "tong tt";grid-template-rows:1fr auto}.mk-tom{grid-area:tom;align-self:start}.mk-tong{grid-area:tong;align-self:end}.mk-tt{grid-area:tt}}
+/* ===== tinh chỉnh v3.13.1 ===== */
+.mk-cot,.mk-dong{grid-template-columns:2.7em minmax(0,1fr) 3.8em 6.6em;gap:.8em}
+.mk-dong{padding-top:.5em;padding-bottom:.5em;flex:none}.mk-dong:nth-child(even):not(.moi){background:rgba(255,255,255,.022)}
+.mk-dong .mk-anh{font-size:.8em;width:3.3em;height:3.3em;border-radius:.75em}
+.mk-dong .t{font-size:1.02em}.mk-dong .t small{margin-top:.1em;font-size:.72em;color:#8fb5a4}
+.mk-dong .mk-s{justify-self:end;display:inline-flex;align-items:baseline;padding:.12em .65em;border-radius:99px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);color:#ecfdf5;font-weight:700;font-size:.92em}
+.mk-dong .mk-s i{font-style:normal;color:#8fb5a4;font-weight:500;margin-right:.12em}
+.mk-dong.moi .mk-s{background:rgba(16,185,129,.3);border-color:rgba(52,211,153,.5)}
+.mk-cuon{display:flex;flex-direction:column}
+.mk-cuoi{flex:1;min-height:5em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6em;opacity:.13;font-size:.75em;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#a7f3d0;pointer-events:none}
+.mk-cuoi .logo{width:4.5em;height:4.5em;filter:grayscale(1) brightness(1.6)}.mk-cuoi .logo svg{width:100%;height:100%}
+.mk-tong{padding:.9em 1.3em 1em}
+.mk-tong-phu{font-size:.78em;margin-bottom:.6em;padding-bottom:.55em;border-bottom:1px solid rgba(255,255,255,.25)}
+.mk-tong-phu div{display:flex;justify-content:space-between;gap:1em;padding:.1em 0;opacity:.92}.mk-tong-phu span{display:inline;font-size:1em;text-transform:none;letter-spacing:0;opacity:1}.mk-tong-phu b{display:inline;font-size:1em;line-height:1.35;letter-spacing:0;font-weight:700;text-shadow:none}.mk-tong-phu .km b{color:#fef3c7}
+.mk-tong .nhan-tong{display:block;font-size:.8em;opacity:.9;text-transform:uppercase;letter-spacing:.08em}
+.mk-tong>b small.d{font-size:.48em;margin-left:.06em;vertical-align:.62em;font-weight:700;opacity:.85}
+.mk-tt{flex:1}
+@media(max-aspect-ratio:1/1){.mk-cot,.mk-dong{grid-template-columns:2.4em minmax(0,1fr) 3.2em 5.4em;gap:.55em}.mk-dong .mk-anh{width:2.9em;height:2.9em}
+.mk-phai{grid-template-areas:"tong tt";grid-template-rows:auto;align-items:stretch}.mk-tong{display:flex;flex-direction:column;justify-content:center;align-self:stretch}.mk-tong>b{font-size:2.3em}}
 
 
 .lai-o{display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:end}.lai-goi{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:12px}.lai-goi button{padding:7px 11px;border-radius:99px;border:1px solid var(--vien);background:#fff;font-weight:700;cursor:pointer;font-size:13px}.lai-goi button:hover{border-color:var(--xanh);color:var(--xanh-d)}
@@ -944,7 +963,7 @@ var CH = (function () {
 })();
 </script>
 <script>
-var PHIEN = "v3.13.0";   // số phiên bản hiện trong menu tài khoản
+var PHIEN = "v3.13.1";   // số phiên bản hiện trong menu tài khoản
 var THAT = true;
 var S = null, ANH = {}, TRANG = "", TIM = "", NHOM = "Tất cả", HD_LOC = "nay", HD_TIM = "", KHO_LOC = "tat", KHO_TIM = "", KH_LOC = "tat", KH_TIM = "", BC = "thang", TT = null, NH = null, XEM_GIO = false, PIN_GO = "";
 var $ = function (i) { return document.getElementById(i); };
@@ -1135,9 +1154,9 @@ function moKhach() {
       var cu2 = {}; ds.forEach(function (x) { cu2[x.ten + "|" + x.gia] = x.sl; }); CU = cu2;
       if (moi >= 0) LAST = moi; else moi = Math.min(LAST, ds.length - 1);
       var dong = ds.map(function (x, k) {
-        return '<div class="mk-dong' + (k === moi ? " moi" : "") + '">' + anhMon(x) + '<span class="t">' + esc(x.ten) + (x.dv ? "<small>" + esc(x.dv) + "</small>" : "") + '</span><span class="mk-s">' + soVN(x.sl) + '</span><span class="mk-g">' + so(x.gia) + "</span><b>" + so(Math.round(x.sl * x.gia)) + "</b></div>";
+        return '<div class="mk-dong' + (k === moi ? " moi" : "") + '">' + anhMon(x) + '<span class="t">' + esc(x.ten) + "<small>" + so(x.gia) + "đ" + (x.dv ? " / " + esc(x.dv) : "") + '</small></span><span class="mk-s"><i>×</i>' + soVN(x.sl) + "</span><b>" + so(Math.round(x.sl * x.gia)) + "</b></div>";
       }).join("");
-      var tom = '<div class="mk-tom"><div><span>Tạm tính (' + soVN(tongSL) + " sản phẩm)</span><b>" + dd(g.tien) + "</b></div>" +
+      var phu = '<div class="mk-tong-phu"><div><span>Tạm tính · ' + soVN(tongSL) + " sản phẩm</span><b>" + dd(g.tien) + "</b></div>" +
         (g.km ? '<div class="km"><span>Khuyến mãi' + (g.kmTen ? " · " + esc(g.kmTen) : "") + "</span><b>−" + dd(g.km) + "</b></div>" : "") +
         (tt && tt.giam ? '<div class="km"><span>Giảm giá</span><b>−' + dd(tt.giam) + "</b></div>" : "") +
         (tt && tt.diem ? '<div class="km"><span>Dùng điểm</span><b>−' + dd(tt.diem) + "</b></div>" : "") + "</div>";
@@ -1146,15 +1165,18 @@ function moKhach() {
         (tt.dua ? '<div class="lon' + (tt.dua < tt.phai ? " thieu" : "") + '"><span>' + (tt.dua >= tt.phai ? "Tiền thối lại" : "Còn thiếu") + "</span><b>" + dd(Math.abs(tt.dua - tt.phai)) + "</b></div>" : "") + "</div>";
       else if (tt && tt.cach === "no") tra = '<span class="nhan">Ghi nợ</span><p style="margin:0;color:#c9e3d7">Đơn hàng được ghi vào sổ nợ</p>';
       else if (g.qr) tra = '<span class="nhan">Quét mã để chuyển khoản</span><div class="mk-qr"><img src="' + g.qr + '" alt="QR"></div><div class="nh"><b>' + esc(g.tk || "") + "</b>" + esc(g.nh) + " · " + esc(g.stk) + "</div>";
-      else tra = '<span class="nhan">Cảm ơn quý khách</span>';
-      h = dau + '<div class="mk-than"><div class="mk-ds">' + (g.kh ? '<div class="mk-kh"><span class="sao">★</span><div><b>Xin chào ' + esc(g.kh.ten || "quý khách") + "!</b><small>" + (g.kh.moi ? "Khách mới · đơn này được tích " + g.kh.cong + " điểm" : "Bạn đang có " + soVN(g.kh.diem) + " điểm" + (g.kh.cong ? " · đơn này +" + g.kh.cong : "")) + "</small></div></div>" : "") + '<div class="mk-ds-dau"><b>Đơn hàng của quý khách</b><span>' + ds.length + ' món</span></div><div class="mk-cot"><span></span><span>Sản phẩm</span><span>SL</span><span>Đơn giá</span><span>Thành tiền</span></div><div class="mk-cuon" id="mk-cuon">' + dong + "</div></div>" +
-        '<div class="mk-phai">' + (false ? '<div class="mk-kh"><span class="sao">★</span><div><b>Xin chào ' + esc(g.kh.ten || "quý khách") + "!</b><small>" + (g.kh.moi ? "Khách mới · đơn này được tích " + g.kh.cong + " điểm" : "Bạn đang có " + soVN(g.kh.diem) + " điểm" + (g.kh.cong ? " · đơn này +" + g.kh.cong : "")) + "</small></div></div>" : "") + tom + '<div class="mk-tong"><span>Tổng thanh toán</span><b>' + dd(g.tong) + '</b></div><div class="mk-tt">' + tra + "</div></div></div>" + chan;
+      else tra = '<div class="mk-cuoi" style="opacity:.35"><div class="logo">' + LOGO + "</div><span>Cảm ơn quý khách</span></div>";
+      var khH = g.kh ? '<div class="mk-kh"><span class="sao">★</span><div><b>Xin chào ' + esc(g.kh.ten || "quý khách") + "!</b><small>" + (g.kh.moi ? "Khách mới · đơn này được tích " + g.kh.cong + " điểm" : "Bạn đang có " + soVN(g.kh.diem) + " điểm" + (g.kh.cong ? " · đơn này +" + g.kh.cong : "")) + "</small></div></div>" : "";
+      h = dau + '<div class="mk-than"><div class="mk-ds">' + khH + '<div class="mk-ds-dau"><b>Đơn hàng của quý khách</b><span>' + ds.length + " món</span></div>" +
+        '<div class="mk-cot"><span></span><span>Sản phẩm</span><span>SL</span><span>Thành tiền</span></div><div class="mk-cuon" id="mk-cuon">' + dong +
+        (ds.length < 6 ? '<div class="mk-cuoi"><div class="logo">' + LOGO + "</div><span>" + esc(g.ten || "") + "</span></div>" : "") + "</div></div>" +
+        '<div class="mk-phai"><div class="mk-tong">' + phu + '<span class="nhan-tong">Tổng thanh toán</span><b>' + so(g.tong) + '<small class="d">đ</small></b></div><div class="mk-tt">' + tra + "</div></div></div>" + chan;
     }
     if (h === KHUNG) return; KHUNG = h;
     o.innerHTML = '<div id="mk">' + h + "</div>";
     if (kieu === "don") { var cu = $("mk-cuon"), m = cu && cu.querySelector(".moi"); if (cu) { cu.scrollLeft = 0; if (m) { var dy = m.offsetTop; if (dy < cu.scrollTop) cu.scrollTop = dy; else if (dy + m.offsetHeight > cu.scrollTop + cu.clientHeight) cu.scrollTop = dy + m.offsetHeight - cu.clientHeight; } else cu.scrollTop = cu.scrollHeight; }
-      var tb = document.querySelector(".mk-tong b"), tu = TONG_CU, den = +g.tong || 0, t0 = performance.now(); TONG_CU = den;
-      if (tb && tu !== den && tu > 0) { tb.textContent = dd(tu); var buoc = function (t) { var p = Math.min(1, (t - t0) / 420), e = 1 - Math.pow(1 - p, 3); tb.textContent = dd(Math.round(tu + (den - tu) * e)); if (p < 1) requestAnimationFrame(buoc); }; requestAnimationFrame(buoc); }
+      var tb = document.querySelector(".mk-tong > b"), tu = TONG_CU, den = +g.tong || 0, t0 = performance.now(); TONG_CU = den;
+      var dS = '<small class="d">đ</small>'; if (tb && tu !== den && tu > 0) { tb.innerHTML = so(tu) + dS; var buoc = function (t) { var p = Math.min(1, (t - t0) / 420), e = 1 - Math.pow(1 - p, 3); tb.innerHTML = so(Math.round(tu + (den - tu) * e)) + dS; if (p < 1) requestAnimationFrame(buoc); }; requestAnimationFrame(buoc); }
     } else TONG_CU = 0;
   };
   // giữ màn hình luôn sáng; chạm 1 lần để toàn màn hình
