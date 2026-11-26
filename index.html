@@ -968,7 +968,7 @@ var CH = (function () {
 })();
 </script>
 <script>
-var PHIEN = "v3.13.2";   // số phiên bản hiện trong menu tài khoản
+var PHIEN = "v3.13.3";   // số phiên bản hiện trong menu tài khoản
 var THAT = true;
 var S = null, ANH = {}, TRANG = "", TIM = "", NHOM = "Tất cả", HD_LOC = "nay", HD_TIM = "", KHO_LOC = "tat", KHO_TIM = "", KH_LOC = "tat", KH_TIM = "", BC = "thang", TT = null, NH = null, XEM_GIO = false, PIN_GO = "";
 var $ = function (i) { return document.getElementById(i); };
@@ -1936,23 +1936,25 @@ function xongTT(nut) {
   var phai = phaiTT();
   if (TT.cach === "no" && !TT.khach) { alert("Ghi nợ thì nhập tên khách"); $("tt-khach").focus(); return; }
   var _xn1 = function () { var coIn = $("tt-in").checked; lsGhi("th_in", coIn);
-  nut.disabled = true; nut.textContent = "Đang lưu…";
-  goi("thanhToan", {dong: gio(), giam: TT.giam, cach: TT.cach, dua: TT.dua, khach: TT.khach, sdt: TT.sdt, diemDung: TT.diemDung || 0, km: tinhKM(gio())}).then(function (o) {
+    // xong NGAY trên máy: dọn giỏ, báo màn khách, hiện hộp "Đã thanh toán"; máy chủ lưu ngầm phía sau
+    var don = DON[CUR], p = {dong: don.d, giam: TT.giam, cach: TT.cach, dua: TT.dua, khach: TT.khach, sdt: TT.sdt, diemDung: TT.diemDung || 0, km: tinhKM(don.d)};
     var tra = TT.cach === "tm" && TT.dua ? TT.dua - phai : null, xk = {tien: phai, thua: tra, cach: TT.cach, kh: khTT()};
     DON.splice(CUR, 1); if (!DON.length) DON = [{d: []}]; CUR = Math.min(CUR, DON.length - 1); luuDon(); XEM_GIO = false;
-    dongHop(); nhan(o); phatKhach(xk);
-    hop("Đã thanh toán ✓", '<div class="phai-tra"><span>' + esc(o.vua) + '</span><b class="so">' + dd(phai) + "</b></div>" + (tra !== null && tra > 0 ? '<div class="hang-tong" style="font-size:19px"><span>Tiền thối lại</span><b class="xanh-chu so">' + dd(tra) + "</b></div>" : "") +
-      '<div class="hai" style="margin-top:16px"><button class="btn lon" data-in="' + esc(o.vua) + '">' + IC.in + 'In hoá đơn</button><button class="btn chinh lon" data-dong="1" autofocus>Đơn mới</button></div>');
-    if (coIn) inHD(o.vua);
-  }).catch(function (e) {
-    if (laLoiMang(e)) {
-      var tra2 = TT.cach === "tm" && TT.dua ? TT.dua - phai : null, xk2 = {tien: phai, thua: tra2, cach: TT.cach, kh: khTT()};
-      choThem({dong: gio(), giam: TT.giam, cach: TT.cach, dua: TT.dua, khach: TT.khach, sdt: TT.sdt, diemDung: TT.diemDung || 0, km: tinhKM(gio())});
-      DON.splice(CUR, 1); if (!DON.length) DON = [{d: []}]; CUR = Math.min(CUR, DON.length - 1); luuDon(); XEM_GIO = false; dongHop(); ve(); phatKhach(xk2);
-      hop("Đã lưu trên máy 📴", '<p class="mo" style="margin-top:-4px">Đang mất mạng nên đơn được lưu tạm trên máy này. Có mạng lại app sẽ <b>tự gửi lên</b>, giữ đúng giờ bán.</p><div class="phai-tra"><span>Phải thu</span><b class="so">' + dd(phai) + "</b></div>" + (tra2 !== null && tra2 > 0 ? '<div class="hang-tong" style="font-size:19px"><span>Tiền thối lại</span><b class="xanh-chu so">' + dd(tra2) + "</b></div>" : "") + '<button class="btn chinh lon" style="margin-top:14px" data-dong="1" autofocus>Đơn mới</button>');
-      return;
-    }
- nut.disabled = false; nut.textContent = "Xác nhận · " + dd(phai); loiBao(e); }); }; if (TT.cach === "tm" && TT.dua && TT.dua < phai) { hoiXN("Khách đưa thiếu " + dd(phai - TT.dua) + ". Vẫn thanh toán?").then(function (ok) { if (ok) _xn1(); }); return; } _xn1(); return; }
+    dongHop(); ve(); phatKhach(xk);
+    hop("Đã thanh toán ✓", '<div class="phai-tra"><span id="tt-so-hd">Đang lưu hoá đơn…</span><b class="so">' + dd(phai) + "</b></div>" + (tra !== null && tra > 0 ? '<div class="hang-tong" style="font-size:19px"><span>Tiền thối lại</span><b class="xanh-chu so">' + dd(tra) + "</b></div>" : "") +
+      '<div class="hai" style="margin-top:16px"><button class="btn lon" id="tt-nut-in" disabled>' + IC.in + 'In hoá đơn</button><button class="btn chinh lon" data-dong="1" autofocus>Đơn mới</button></div>');
+    var hopNay = function () { return $("hop").hidden ? null : $("tt-so-hd"); };
+    goi("thanhToan", p).then(function (o) {
+      var a = document.activeElement; S = o; if (!a || a.tagName !== "INPUT" || a.id === "tim") ve();
+      var sh = hopNay(); if (sh) { sh.textContent = o.vua + " ✓"; var ni = $("tt-nut-in"); if (ni) { ni.disabled = false; ni.setAttribute("data-in", o.vua); } }
+      else bao("✓ Đã lưu " + dd(phai) + " · " + o.vua);
+      if (coIn) inHD(o.vua);
+    }).catch(function (e) {
+      if (laLoiMang(e)) { choThem(p); var sh2 = hopNay(); if (sh2) sh2.textContent = "📴 Mất mạng — đã lưu trên máy, có mạng sẽ tự gửi"; else bao("📴 Mất mạng — đã lưu đơn " + dd(phai) + " trên máy, có mạng sẽ tự gửi"); return; }
+      if (hopNay()) dongHop();
+      if (!gio().length) DON[CUR] = don; else { DON.push(don); CUR = DON.length - 1; } luuDon(); ve(); phatKhach();
+      loiBao(e); bao("Chưa lưu được, đơn đã trả lại giỏ");
+    }); }; if (TT.cach === "tm" && TT.dua && TT.dua < phai) { hoiXN("Khách đưa thiếu " + dd(phai - TT.dua) + ". Vẫn thanh toán?").then(function (ok) { if (ok) _xn1(); }); return; } _xn1(); return; }
 
 // ---------- in ----------
 function inGiay(html, kieu, sau) { var v = $("in-vung"); v.innerHTML = html; if (sau) sau(v); document.body.classList.add("dang-in", "kieu-" + kieu); document.body.classList.toggle("kho80", kieu === "hd" && lsDoc("th_kho", "58") === "80"); setTimeout(function () { window.print(); setTimeout(function () { document.body.classList.remove("dang-in", "kieu-hd", "kieu-tem", "kho80"); }, 500); }, 120); }
